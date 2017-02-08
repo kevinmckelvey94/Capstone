@@ -1,0 +1,320 @@
+
+<!--Capstone Group 7: Hackstreet Boys -->
+<!--Code Visualizer -->
+<!--John Bryant, Eric Collins, Kevin McKelvey, Dominic Scott -->
+<!-- Begin HTML -->
+
+<!-- Notes:
+	***Embed Javascript in seperate files***
+	Find package in Atom (Javascript interpreter)
+
+	Clear button used to clear drawing
+
+	String dimensions: getBBox - use to get Javascript bounding box of an SVG text element
+
+	Have previous function calls stored on the page so that
+	we can recreate the drawing quickly and edit functions
+	
+	***Use monospaced fixed-width font***
+	Get bbox for text and then use that to create larger bounding box for function
+	
+	Make all parameter and local boxes scalable
+	
+	Fix offset value
+-->
+
+<html lang="en">
+<head>
+    <title>Rough Draft</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script>
+	
+		var functions = [];
+		var svgOutput = ""; // stores entire svg string
+		var xPos = 10;
+		var yPos = 10;
+		var offest = 5;
+		
+		
+		class Members{
+			constructor(name){
+				this.name = name; // name of member
+				this.xAnchor = 0; // anchor point
+				this.yAnchor = 0; // anchor point
+				this.width = this.width(); // width of box
+				this.height = this.height(); // height of box
+				this.xoffset = 5; // x-axis offset
+				this.yoffset = 5; // y-axis offset
+			}
+			
+			width() { return 1; }
+			height() { return 1; }
+			draw(){}
+		}
+		
+		class Function extends Members{
+			constructor(name,para,local){
+				super(name);
+				this.para = para; // array of parameters (which are members)
+				this.local = local; // array of local variables (which are members)
+				this.populateElements();
+			}
+			
+			
+			populateElements(){
+				for( var i = 0; i < this.para.length; i++){
+					this.width += this.para[i].width;
+				}
+				for(var i = 0; i < this.local.length; i++){
+					this.height += this.local[i].height;
+				}
+			}
+			draw(x,y){
+				var retString = "";
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.width + "\" height=\"" + this.height + "\" style=\"stroke: black; fill:none;\"/>";
+				x += 10;
+				y += 20;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				return retString;
+			}
+		}				
+		class Object extends Members{
+			constructor(name,objName,vals){
+				super(name);
+				this.variables = vals;
+				this.objName = objName;
+				this.width = 100;
+				this.height = 50;
+			}
+			draw(x,y){
+				var retString = "";
+				var xKey = x + 5
+				var yKey = y
+				var xBox = x + 25
+				var yBox = y - 15
+				var xValue = x + 30
+				var yValue = y;
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"20\" height=\"20\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				//retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
+				x += 200;
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.width + "\" height=\"" + this.height + "\" style=\"stroke: black; fill:none;\"/>";
+				x += 10;
+				y += 20;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
+				for (var i = 0; i < this.variables.length; i++){
+					y += this.variables[i].height;
+					retString += this.variables[i].draw(x,y);
+				}
+				return retString;
+			}
+		}
+		// Variable class stores a name and a value for individual variables
+		class Var extends Members{
+			constructor(name,value){
+				super(name);
+				this.value = value;
+				this.width = this.widthFunc();
+				this.height = this.heightFunc();
+			}
+			// Width function calculates the width (in pixels) of the name and value strings
+			// These values are added together with the x-offset value to generate the width
+			// of the container
+			widthFunc(){
+				var fontSize = 14;
+				var width = this.name.length * fontSize; //measureText(this.name) + 1;
+				width += this.value.length * fontSize; //(this.value.clientWidth + 1);
+				width += this.xoffset; // multiply offset by 3 to account for middle and side offsets
+				return width;
+			}
+			heightFunc(){
+				test.style.fontSize = 14;
+				var height = 30 //(this.name.clientHeight + 1);
+				height += this.yoffset;
+				return height;
+			}
+			draw(x,y){
+				var xKey = x + 5
+				var yKey = y
+				var xBox = x + 25
+				var yBox = y - 15
+				var xValue = x + 30
+				var yValue = y
+				var retString = "";
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"20\" height=\"20\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
+				return retString;
+			}
+		}
+		// Function called to remove the last 'function' placed on the call stack
+		function returnFun(){
+			functions.pop();
+		}
+		
+		// takes variable from (example) 'x=3' to an Var object
+		function parseVariable(variable){
+			var sVar = variable.split("=");
+			return new Var(sVar[0],sVar[1]);
+		}
+		// builds an array for the new object in order to store in the Object class
+		function buildObjectArray(variables){
+			var vars = [];
+			for(var i = 0; i < variables.length; i++){
+				var sVar = variables[i].split("=");
+				vars.push(new Var(sVar[0],sVar[1]));
+			}
+			return vars;
+		}
+		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated	
+		function newObject(fullObj){
+			parseOne = fullObj.replace('(',' ');
+			parseOne = parseOne.replace(')','');
+			parsedObj = parseOne.split(' ');
+			names = parsedObj[0].split('=')
+			varsArray = buildObjectArray(parsedObj[1].split(','));
+			return new Object(names[0],names[1],varsArray);
+		}
+			
+		// creates an array of variable objects, whether Var or Object, to be used to create the new function	
+		function storeVariables(variables){
+			var vars = [];
+			for(var i = 0; i < variables.length; i++){
+				if (/[A-Za-z0-9]*\([A-Za-z0-9=,]*\)/.test(variables[i])){
+					vars.push(newObject(variables[i]));
+				}
+				else {
+					vars.push(parseVariable(variables[i]));
+				}
+			}
+			return vars;
+		}
+		
+		function call(){
+			var rawText = document.getElementById("functioncall").value;
+			var mainArray = rawText.split("."); // need error checking
+			var paraText = mainArray[1].split(";"); // need error checking
+			var localText = mainArray[2].split(";"); // need error checking
+			var para = storeVariables(paraText);
+			var local = storeVariables(localText);
+			functions.push(new Function(mainArray[0],para,local)); // used to store all user-defined functions
+			//window.alert(functions);
+				
+			// generate svg below. "content" is the string used to store the entire svg text
+			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
+			svgOutput += drawFunction();
+			svgOutput += "</svg>";	
+			
+			console.log(svgOutput);
+			document.getElementById("out").innerHTML = svgOutput;
+		}
+		// Generates svg text based off of the parsed code passed as an argument
+        function drawFunction(){
+			var retString = "";
+			// loop over all members in "functions" and generate one long svg string for them
+			for(var i = functions.length - 1; i >= 0; i--){
+				retString += functions[i].draw(xPos,yPos);
+				yPos += 20;
+				//Loop over parameters
+				var temp = xPos;
+				for(var j=0; j < functions[i].para.length; j++){
+					temp += functions[i].para[j].width;
+					retString += functions[i].para[j].draw(temp,yPos);
+				}
+				temp = yPos;
+				for(var j=0; j < functions[i].local.length; j++){
+					temp += functions[i].local[j].height;
+					retString += functions[i].local[j].draw(xPos,temp);
+				}
+				
+			}
+            return retString;
+        }
+		// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+        // Code temporarily taken from source above. Will be tailored to our project in later edition
+        function saveTextAsFile(){
+            var textToSave = svgOutput
+            //var textToSave = document.getElementById("out").value;
+            var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
+            var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+            var fileNameToSaveAs = document.getElementById("saveFileName").value;
+
+            var downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "Download File";
+            downloadLink.href = textToSaveAsURL;
+            downloadLink.onclick = destroyClickedElement;
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+
+            downloadLink.click();
+        }
+		function clear(){
+			functions = [];
+			svgOutput = "";
+			document.getElementById("out").innerHTML = svgOutput;
+			window.location.reload();
+		}
+    </script>
+
+</head>
+<body>
+    <div >
+        <!--Header-->
+        <div class="header">Rough Draft</div>
+
+        <!--Input-->
+        <div class="input">
+			<p>Type code in the text field.</p>
+            <p>Ex:</p>
+            <p>"main.x=3;y=2.a=1;b=2"</p>
+			<p>Example with a Object</p>
+			<p>"main.x=3;y=2.a=1;b=point(x=1,y=1)"</p>
+			
+			Function Call: <textarea id="functioncall" rows="1" cols="30"></textarea>
+			<br><br>
+			<button onclick="call()">
+				Function Call
+			</button>
+            <br><br>
+			<button onclick="returnFun()">
+                Return
+            </button>
+			<br><br>
+            <button onclick="saveTextAsFile()">
+                Save to File
+            </button>
+		
+            FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
+			
+			<br><br>
+			<button onclick="clear()">
+				Clear
+			</button>
+
+        </div>
+
+        <div  class="output">
+            <div id ="out">
+
+            </div>
+
+
+        </div>
+
+        <!--FOOTER-->
+        <div class="footer">
+            <b>Hackstreet Boys</b> - Lab 7 <br/>
+
+        </div>
+    </div>
+    <div id="test">
+
+    </div>
+
+    <div>
+
+    </div>
+</div>
+
+</body></html>
