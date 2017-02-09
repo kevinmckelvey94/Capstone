@@ -5,6 +5,8 @@
 <!-- Begin HTML -->
 
 <!-- Notes:
+
+	*** 27JAN2017 ***
 	***Embed Javascript in seperate files***
 	Find package in Atom (Javascript interpreter)
 
@@ -14,28 +16,64 @@
 
 	Have previous function calls stored on the page so that
 	we can recreate the drawing quickly and edit functions
-	
+
+
+	***08 FEB2017 ***
 	***Use monospaced fixed-width font***
 	Get bbox for text and then use that to create larger bounding box for function
-	
+
 	Make all parameter and local boxes scalable
-	
+
 	Fix offset value
+
+
+	*** 09FEB2017 ***
+	Nested objects***
+
+	Fix padding between name and value within parameters. Make it tight so they look
+		like they are associated with one another
+
+	Encapsulate parameters list within parentheses (after function name) so it is clear
+		that they are parameters
+
+	Heap elements overlap
+
+	Draw pointer arrow from center of box to middle of lefthand boundary
+
+	Fix function stack so that multiple drawings are on top of one another (stack grows up)***
+
+	Function return animation
+
+	Presence of newline indicates new function. So this way we can make multiple function calls
+		in one go, rather than calling functions once at a time. Function calls go from first to last,
+		top to bottom
+
+	Have ability to define structs within the function stack as well as the heap. If "point" is specified,
+		place within the stack. If "newpoint or new" is specified, put it in the heap.
+
 -->
 
+<!-- HTML Begin -->
 <html lang="en">
 <head>
-    <title>Rough Draft</title>
+    <title>Rough Draft - Master</title>
     <link rel="stylesheet" type="text/css" href="style.css">
+
+		<!-- Begin Javascript -->
     <script>
-	
-		var functions = [];
-		var svgOutput = ""; // stores entire svg string
-		var xPos = 10;
-		var yPos = 10;
-		var offest = 5;
-		
-		
+
+		/** Global Variables **/
+		var functions = []; // Array stores all user-defined functions
+		var svgOutput = ""; // Stores entire svg string used for display and output
+		var xPos = 10;			// Base x-position used as an "anchor" for the display
+		var yPos = 10;			// Base y-position used as an "anchor" for the display
+		var offest = 5;			// Offset value used for padding within/between containers
+
+		/** Base class used to store all objects (functions and variables)
+			* Contains fields for the name, anchor points, width, height, and offsets
+			* of each member. Anchor and offsets are currently not used, currently replaced
+			* by standardized global anchor/offset values
+			**/
 		class Members{
 			constructor(name){
 				this.name = name; // name of member
@@ -49,15 +87,18 @@
 			height() { return 1; }
 			draw(){}
 		}
-		
+
+		/** Function class is used to define a "function" which is provided parameters
+			* and local variables by the user.
+			**/
 		class Function extends Members{
 			constructor(name,para,local){
 				super(name);
 				this.para = para; // array of parameters (which are members)
 				this.local = local; // array of local variables (which are members)
-				this.populateElements();
+				this.populateElements(); // used to define width and height
 			}
-			
+
 			nameLength(){
 				return this.name.length*this.charWidth + 15;
 			}
@@ -92,7 +133,11 @@
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				return retString;
 			}
-		}				
+		}
+
+		/** Object class is used to create a pointer to an object that
+			* appears as its own isolated box.
+			*/
 		class Object extends Members{
 			constructor(name,objName,vals){
 				super(name);
@@ -101,6 +146,7 @@
 				this.width = 100;
 				this.height = 50;
 			}
+
 			heightOfBox(){
 				var height = 5;
 				for( var i = 0; i < this.variables.length + 1; i++){
@@ -108,9 +154,11 @@
 					}
 				return height;
 			}
+
 			widthOfBox(){
 				return this.objName.length*this.charWidth + 15;
 			}
+
 			draw(x,y){
 				var retString = "";
 				var xKey = x + 5
@@ -136,18 +184,21 @@
 				return retString;
 			}
 		}
-		// Variable class stores a name and a value for individual variables
+
+		/** Variable class stores a name and a value for individual variables */
 		class Var extends Members{
 			constructor(name,v){
 				super(name);
 				this.value = v;
 				this.width = this.widthTot();
 				this.height = 20;
-				
+
 			}
-			// Width function calculates the width (in pixels) of the name and value strings
-			// These values are added together with the x-offset value to generate the width
-			// of the container
+
+			/** Width function calculates the width (in pixels) of the name and value strings
+			 	*These values are added together with the x-offset value to generate the width
+			  *of the container
+				*/
 			widthTot(){
 				var width = 0;
 				width += 25;
@@ -162,7 +213,8 @@
 			}
 			widthName(){
 				return this.name.length*this.charWidth + 10;
-				}
+			}
+
 			draw(x,y){
 				//window.alert(x + " " + y);
 				var xBox = x + this.widthName();
@@ -176,22 +228,24 @@
 				return retString;
 			}
 		}
+
 		// Function called to remove the last 'function' placed on the call stack
 		function returnFun(){
 			functions = [];
 			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
 			svgOutput += drawFunction();
-			svgOutput += "</svg>";	
-			
+			svgOutput += "</svg>";
+
 			console.log(svgOutput);
 			document.getElementById("out").innerHTML = svgOutput;
 		}
-		
+
 		// takes variable from (example) 'x=3' to an Var object
 		function parseVariable(variable){
 			var sVar = variable.split("=");
 			return new Var(sVar[0],sVar[1]);
 		}
+
 		// builds an array for the new object in order to store in the Object class
 		function buildObjectArray(variables){
 			var vars = [];
@@ -201,7 +255,8 @@
 			}
 			return vars;
 		}
-		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated	
+
+		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated
 		function newObject(fullObj){
 			parseOne = fullObj.replace('(',' ');
 			parseOne = parseOne.replace(')','');
@@ -210,8 +265,8 @@
 			varsArray = buildObjectArray(parsedObj[1].split(','));
 			return new Object(names[0],names[1],varsArray);
 		}
-			
-		// creates an array of variable objects, whether Var or Object, to be used to create the new function	
+
+		// creates an array of variable objects, whether Var or Object, to be used to create the new function
 		function storeVariables(variables){
 			var vars = [];
 			for(var i = 0; i < variables.length; i++){
@@ -224,7 +279,7 @@
 			}
 			return vars;
 		}
-		
+
 		function call(){
 			var rawText = document.getElementById("functioncall").value;
 			var mainArray = rawText.split("."); // need error checking
@@ -234,17 +289,18 @@
 			var local = storeVariables(localText);
 			functions.push(new Function(mainArray[0],para,local)); // used to store all user-defined functions
 			//window.alert(functions);
-				
+
 			// generate svg below. "content" is the string used to store the entire svg text
 			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
 			svgOutput += drawFunction();
-			svgOutput += "</svg>";	
-			
+			svgOutput += "</svg>";
+
 			console.log(svgOutput);
 			document.getElementById("out").innerHTML = svgOutput;
 		}
+
 		// Generates svg text based off of the parsed code passed as an argument
-        function drawFunction(){
+    function drawFunction(){
 			//window.alert(xPos + " " + yPos);
 			var retString = "";
 			// loop over all members in "functions" and generate one long svg string for them
@@ -265,19 +321,22 @@
 					retString += functions[i].local[j].draw(xPos,temp);
 					temp += functions[i].local[j].charHeight;
 				}
-				
+
 			}
             return retString;
-        }
+    }
+
+		/** Saves svg output in plaintext to a file specified by the user
+			* Does not save if no output exists or if the filename is not specified
+			*/
 		// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
-        // Code temporarily taken from source above. Will be tailored to our project in later edition
-        function saveTextAsFile(){
-            var textToSave = svgOutput
-			if ( textToSave != ""){
-				//var textToSave = document.getElementById("out").value;
+    function saveTextAsFile(){
+      var textToSave = svgOutput
+			var fileNameToSaveAs = document.getElementById("saveFileName").value;
+			window.alert(fileNameToSaveAs)
+			if ( textToSave != "" && fileNameToSaveAs != ""){
 				var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
 				var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-				var fileNameToSaveAs = document.getElementById("saveFileName").value;
 
 				var downloadLink = document.createElement("a");
 				downloadLink.download = fileNameToSaveAs;
@@ -289,21 +348,29 @@
 
 				downloadLink.click();
 			}
-			else{
-				window.alert("Nothing to Save");
+			else {
+				if ( textToSave == "" ){
+					window.alert("No output to save");
+				} else if (fileNameToSaveAs == "") {
+					window.alert("Please specify a filename")
 				}
-        }
-		  // https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
-        function destroyClickedElement(event){
-            document.body.removeChild(event.target);
-        }
+			}
+    }
+
+		// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+    function destroyClickedElement(event){
+        document.body.removeChild(event.target);
+    }
+
 		function clear(){
+			window.alert("Button clicked")
 			functions = [];
 			svgOutput = "";
 			document.getElementById("out").innerHTML = svgOutput;
 			window.location.reload();
 		}
     </script>
+		<!-- End Javascript -->
 
 </head>
 <body>
@@ -318,7 +385,7 @@
             <p>"main.x=3;y=2.a=1;b=2"</p>
 			<p>Example with a Object</p>
 			<p>"main.x=3;y=2.a=1;b=point(x=1,y=1)"</p>
-			
+
 			Function Call: <textarea id="functioncall" rows="1" cols="30"></textarea>
 			<br><br>
 			<button onclick="call()">
@@ -332,9 +399,9 @@
             <button onclick="saveTextAsFile()">
                 Save to File
             </button>
-		
+
             FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
-			
+
 			<br><br>
 			<button onclick="clear()">
 				Clear
@@ -344,7 +411,7 @@
 
         <div  class="output">
             <div id ="out">
-			
+
             </div>
 
 
