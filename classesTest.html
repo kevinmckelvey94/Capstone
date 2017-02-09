@@ -76,14 +76,16 @@
 			**/
 		class Members{
 			constructor(name){
-				this.name = name; // name of member
-				//this.width = this.width(); // width of box
-				this.height = this.height(); // height of box
-				this.charWidth = 12.05;
-				this.charHeight = 30;
-				this.offset = 5;
+				this.name = name;             // name of member
+				//this.width = this.width();  // width of box
+				this.height = this.height();  // height of box
+				this.charWidth = 12.05;       // standard character width
+				this.charHeight = 30;         // standard character height
+				this.offset = 5;              // offset used as "padding" between elements
 			}
-			width() { return 1; }
+
+      // Class specific functions
+			width()  { return 1; }
 			height() { return 1; }
 			draw(){}
 		}
@@ -94,43 +96,46 @@
 		class Function extends Members{
 			constructor(name,para,local){
 				super(name);
-				this.para = para; // array of parameters (which are members)
-				this.local = local; // array of local variables (which are members)
-				this.populateElements(); // used to define width and height
+				this.para = para; 				// array of parameters (which are members)
+				this.local = local; 			// array of local variables (which are members)
+				//this.populateElements(); 	// used to define width and height
 			}
 
-			nameLength(){
-				return this.name.length*this.charWidth + 15;
-			}
+			nameLength(){ return this.name.length*this.charWidth + 15; } // length of function name in pixels
+
+			// Iterate over parameters and local variables to create total height and width
+			// for the bounding box.
 			populateElements(){
-				for( var i = 0; i < this.para.length; i++){
-					this.width += this.para[i].width;
-				}
-				for(var i = 0; i < this.local.length; i++){
-					this.height += this.local[i].height;
-				}
+				//for(var i = 0; i < this.para.length; i++){ this.width += this.para[i].width; }
+				//for(var i = 0; i < this.local.length; i++){ this.height += this.local[i].height; }
 			}
+
+			// Calculate height of box by computing the sum of all characters in the locals array
 			heightOfBox(){
-				var height = 5;
-				for( var i = 0; i < this.local.length + 1; i++){
-					height += this.charHeight;
-					}
+				var height = this.offset; // initialize height to 5 pixels
+				for( var i = 0; i < this.local.length + 1; i++){ height += this.charHeight; }
 				return height;
 			}
+
 			widthOfBox(){
-				var width = 0;
-				width += this.nameLength();
-				for(var i = 0; i < this.para.length; i++){
-					width += this.para[i].widthTot();
-				}
+				var width = this.offset*4; 							// initialize width to 10 pixels
+				width += this.nameLength(); // add length of function name to width total
+				for(var i = 0; i < this.para.length; i++){ width += this.para[i].widthTot(); }
 				return width;
 			}
+
+			// Draw function generates SVG text with the parameters defined in each function.
 			draw(x,y){
-				var retString = "";
+				var retString = ""; // initialize empty string
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() + "\" height=\"" + this.heightOfBox() + "\" style=\"stroke: black; fill:none;\"/>";
-				x += 10;
-				y += 20;
+				x += 10; // offset for function name
+				y += 20; // offset for function name
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+
+				x += this.nameLength() - 15;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ( </text>";
+				x += this.widthOfBox() - this.nameLength() - this.offset*2;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ) </text>";
 				return retString;
 			}
 		}
@@ -148,39 +153,51 @@
 			}
 
 			heightOfBox(){
-				var height = 5;
-				for( var i = 0; i < this.variables.length + 1; i++){
-					height += this.charHeight;
-					}
+				var height = this.offset;
+				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight; }
 				return height;
 			}
 
-			widthOfBox(){
-				return this.objName.length*this.charWidth + 15;
-			}
+			widthOfBox(){ return this.objName.length*this.charWidth + this.offset*3; }
 
+			// Receives current xPos and yPos from drawFunction()
 			draw(x,y){
 				var retString = "";
-				var xKey = x + 5
-				var yKey = y
-				var xBox = x + 25
-				var yBox = y - 15
-				var xValue = x + 30
-				var yValue = y;
-				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"20\" height=\"20\" style=\"stroke: black; fill:none;\"/>";
+				var xKey = x + 10		// x-position for text
+				var yKey = y				// y-position for text
+				var xBox = x + 27.5	// x-position for box
+				var yBox = y - 17.5	// y-position for box
+				var x1 = 0					// x-position for base of pointer
+				var y1 = 0					// y-position for base of pointer
+				var x2 = 0					// x-position for tip of pointer
+				var y2 = 0					// y-position for tip of pointer
+
+				// Draw name and bounding box within heap
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
 				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
-				//retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
+				x1 = xBox + 11.25
+				y1 = yBox + 11.25
+
+				// Draw name and bounding box on the stack
 				x += 200;
 				y -= 20;
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
+				x2 = x
+				y2 = y + this.heightOfBox()/2
 				x += 10;
 				y += 20;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
+
+				// Draw line pointer from middle of stack box to left-center of heap box
+				retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+
+				y += 10;
 				for (var i = 0; i < this.variables.length; i++){
 					y += this.variables[i].height;
 					retString += this.variables[i].draw(x,y);
-					y += 5;
+					y += 10;
 				}
+
 				return retString;
 			}
 		}
@@ -217,9 +234,10 @@
 
 			draw(x,y){
 				//window.alert(x + " " + y);
-				var xBox = x + this.widthName();
-				var yBox = y - 15
-				var xValue = x + this.widthName() + 5;
+				x += 10
+				var xBox = x + this.widthName() - this.offset;
+				var yBox = y - 17.5
+				var xValue = x + this.widthName();
 				var yValue = y
 				var retString = "";
 				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthValue() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
