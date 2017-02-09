@@ -1,0 +1,79 @@
+
+.header
+{    
+    /*This is the header element
+     *The font should be 30 point and alignment is center
+     *There is only a bottom border that is 1 black pixel
+    */
+    font-size: 30pt;
+    text-align: center;
+    border-bottom: 1px solid;
+}
+.footer
+{
+    /*This is the footer element
+     *The font should be 12 point and alignment is center
+     *There is only a top border that is 1 black pixel
+    */
+    background-color: #6F8ED6;
+    font-size: 12pt;
+    text-align: center;
+    border-top: 1px solid;
+}
+
+.input
+{
+    /*This is the stock list
+     *It floats on the left
+     *It clears anything on its left
+     *The width is 300 pixels
+     *It has no border
+     *It has 5 pixels of padding on each side
+    */
+    float: left;
+    clear: left;
+    width: 300px;
+    border: none;
+    padding: 5px;
+   
+}
+
+.output
+{
+    /*This is an information panel
+     *Its left margin is 310 pixels
+     *It has a left and bottom border that is 1 black pixel
+     *It has 5 pixels of padding on each side
+    */
+	font-family: "Lucida Console";
+    height: 100%;
+    margin-left: 310px;
+    border-left: 1px solid ;
+    border-bottom: 1px solid;
+    padding: 5px;
+    overflow: scroll;
+    
+ 
+}
+
+#textbox
+{
+	font-family: "Lucida Console";
+    height:200px;
+    font-size:14pt;
+}
+
+#main
+{
+    /*This is the main container
+     *the minimum width is 600 pixels
+     *full border that is 1 black pixel
+    */
+	font-family: "Lucida Console";
+    background-image: url("images/lavender.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    min-width: 600px;
+    border: 1px solid;
+}
+

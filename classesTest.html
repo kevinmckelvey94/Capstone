@@ -39,14 +39,12 @@
 		class Members{
 			constructor(name){
 				this.name = name; // name of member
-				this.xAnchor = 0; // anchor point
-				this.yAnchor = 0; // anchor point
-				this.width = this.width(); // width of box
+				//this.width = this.width(); // width of box
 				this.height = this.height(); // height of box
-				this.xoffset = 5; // x-axis offset
-				this.yoffset = 5; // y-axis offset
+				this.charWidth = 12.05;
+				this.charHeight = 30;
+				this.offset = 5;
 			}
-			
 			width() { return 1; }
 			height() { return 1; }
 			draw(){}
@@ -60,7 +58,9 @@
 				this.populateElements();
 			}
 			
-			
+			nameLength(){
+				return this.name.length*this.charWidth + 15;
+			}
 			populateElements(){
 				for( var i = 0; i < this.para.length; i++){
 					this.width += this.para[i].width;
@@ -69,9 +69,24 @@
 					this.height += this.local[i].height;
 				}
 			}
+			heightOfBox(){
+				var height = 5;
+				for( var i = 0; i < this.local.length + 1; i++){
+					height += this.charHeight;
+					}
+				return height;
+			}
+			widthOfBox(){
+				var width = 0;
+				width += this.nameLength();
+				for(var i = 0; i < this.para.length; i++){
+					width += this.para[i].widthTot();
+				}
+				return width;
+			}
 			draw(x,y){
 				var retString = "";
-				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.width + "\" height=\"" + this.height + "\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() + "\" height=\"" + this.heightOfBox() + "\" style=\"stroke: black; fill:none;\"/>";
 				x += 10;
 				y += 20;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
@@ -86,6 +101,16 @@
 				this.width = 100;
 				this.height = 50;
 			}
+			heightOfBox(){
+				var height = 5;
+				for( var i = 0; i < this.variables.length + 1; i++){
+					height += this.charHeight;
+					}
+				return height;
+			}
+			widthOfBox(){
+				return this.objName.length*this.charWidth + 15;
+			}
 			draw(x,y){
 				var retString = "";
 				var xKey = x + 5
@@ -98,58 +123,68 @@
 				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				//retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
 				x += 200;
-				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.width + "\" height=\"" + this.height + "\" style=\"stroke: black; fill:none;\"/>";
+				y -= 20;
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
 				x += 10;
 				y += 20;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
 				for (var i = 0; i < this.variables.length; i++){
 					y += this.variables[i].height;
 					retString += this.variables[i].draw(x,y);
+					y += 5;
 				}
 				return retString;
 			}
 		}
 		// Variable class stores a name and a value for individual variables
 		class Var extends Members{
-			constructor(name,value){
+			constructor(name,v){
 				super(name);
-				this.value = value;
-				this.width = this.widthFunc();
-				this.height = this.heightFunc();
+				this.value = v;
+				this.width = this.widthTot();
+				this.height = 20;
+				
 			}
 			// Width function calculates the width (in pixels) of the name and value strings
 			// These values are added together with the x-offset value to generate the width
 			// of the container
-			widthFunc(){
-				var fontSize = 14;
-				var width = this.name.length * fontSize; //measureText(this.name) + 1;
-				width += this.value.length * fontSize; //(this.value.clientWidth + 1);
-				width += this.xoffset; // multiply offset by 3 to account for middle and side offsets
+			widthTot(){
+				var width = 0;
+				width += 25;
+				width += this.name.length*this.charWidth;
+				width += this.value.length*this.charWidth;
 				return width;
 			}
-			heightFunc(){
-				test.style.fontSize = 14;
-				var height = 30 //(this.name.clientHeight + 1);
-				height += this.yoffset;
-				return height;
+			widthValue(){
+				var width = 10;
+				width += this.value.length*this.charWidth;
+				return width;
 			}
+			widthName(){
+				return this.name.length*this.charWidth + 10;
+				}
 			draw(x,y){
-				var xKey = x + 5
-				var yKey = y
-				var xBox = x + 25
+				//window.alert(x + " " + y);
+				var xBox = x + this.widthName();
 				var yBox = y - 15
-				var xValue = x + 30
+				var xValue = x + this.widthName() + 5;
 				var yValue = y
 				var retString = "";
-				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"20\" height=\"20\" style=\"stroke: black; fill:none;\"/>";
-				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthValue() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
 				return retString;
 			}
 		}
 		// Function called to remove the last 'function' placed on the call stack
 		function returnFun(){
-			functions.pop();
+			functions = [];
+			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
+			svgOutput += drawFunction();
+			svgOutput += "</svg>";	
+			
+			console.log(svgOutput);
+			document.getElementById("out").innerHTML = svgOutput;
 		}
 		
 		// takes variable from (example) 'x=3' to an Var object
@@ -210,21 +245,25 @@
 		}
 		// Generates svg text based off of the parsed code passed as an argument
         function drawFunction(){
+			//window.alert(xPos + " " + yPos);
 			var retString = "";
 			// loop over all members in "functions" and generate one long svg string for them
 			for(var i = functions.length - 1; i >= 0; i--){
 				retString += functions[i].draw(xPos,yPos);
 				yPos += 20;
+				xPos += functions[i].nameLength();
+				//window.alert(xPos + " " + yPos);
 				//Loop over parameters
 				var temp = xPos;
 				for(var j=0; j < functions[i].para.length; j++){
-					temp += functions[i].para[j].width;
 					retString += functions[i].para[j].draw(temp,yPos);
+					temp += functions[i].para[j].widthTot();
 				}
+				yPos += functions[i].charHeight + 5;
 				temp = yPos;
 				for(var j=0; j < functions[i].local.length; j++){
-					temp += functions[i].local[j].height;
 					retString += functions[i].local[j].draw(xPos,temp);
+					temp += functions[i].local[j].charHeight;
 				}
 				
 			}
@@ -234,20 +273,29 @@
         // Code temporarily taken from source above. Will be tailored to our project in later edition
         function saveTextAsFile(){
             var textToSave = svgOutput
-            //var textToSave = document.getElementById("out").value;
-            var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
-            var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-            var fileNameToSaveAs = document.getElementById("saveFileName").value;
+			if ( textToSave != ""){
+				//var textToSave = document.getElementById("out").value;
+				var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
+				var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+				var fileNameToSaveAs = document.getElementById("saveFileName").value;
 
-            var downloadLink = document.createElement("a");
-            downloadLink.download = fileNameToSaveAs;
-            downloadLink.innerHTML = "Download File";
-            downloadLink.href = textToSaveAsURL;
-            downloadLink.onclick = destroyClickedElement;
-            downloadLink.style.display = "none";
-            document.body.appendChild(downloadLink);
+				var downloadLink = document.createElement("a");
+				downloadLink.download = fileNameToSaveAs;
+				downloadLink.innerHTML = "Download File";
+				downloadLink.href = textToSaveAsURL;
+				downloadLink.onclick = destroyClickedElement;
+				downloadLink.style.display = "none";
+				document.body.appendChild(downloadLink);
 
-            downloadLink.click();
+				downloadLink.click();
+			}
+			else{
+				window.alert("Nothing to Save");
+				}
+        }
+		  // https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+        function destroyClickedElement(event){
+            document.body.removeChild(event.target);
         }
 		function clear(){
 			functions = [];
@@ -296,7 +344,7 @@
 
         <div  class="output">
             <div id ="out">
-
+			
             </div>
 
 
