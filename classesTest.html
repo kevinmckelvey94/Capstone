@@ -65,8 +65,10 @@
 		/** Global Variables **/
 		var functions = []; // Array stores all user-defined functions
 		var svgOutput = ""; // Stores entire svg string used for display and output
-		var xPos = 10;			// Base x-position used as an "anchor" for the display
-		var yPos = 10;			// Base y-position used as an "anchor" for the display
+		var xAnchor = 10;		// Base x-position used as an "anchor" for the display
+		var yAnchor = 10;		// Base y-position used as an "anchor" for the display
+		var xPos = 0;				// x-position used as an "anchor" for the newest function
+		var yPos = 0;				// y-position used as an "anchor" for the newest function
 		var offest = 5;			// Offset value used for padding within/between containers
 
 		/** Base class used to store all objects (functions and variables)
@@ -158,7 +160,22 @@
 				return height;
 			}
 
-			widthOfBox(){ return this.objName.length*this.charWidth + this.offset*3; }
+			widthOfBox(){
+				var width = this.offset*3;
+
+				var nameWidth = this.objName.length*this.charWidth;
+
+				var varWidth = 0;
+				for (var i = 0; i < this.variables.length; i++) {
+					if (this.variables[i].width > varWidth) {
+						varWidth = this.variables[i].width;
+					}
+				}
+
+				if (nameWidth >= varWidth) { width = nameWidth + this.offset*3; }
+				else { width = varWidth + this.offset*4; }
+				return width;
+			}
 
 			// Receives current xPos and yPos from drawFunction()
 			draw(x,y){
@@ -180,7 +197,7 @@
 
 				// Draw name and bounding box on the stack
 				x += 200;
-				y -= 20;
+				y = y;
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
 				x2 = x
 				y2 = y + this.heightOfBox()/2
@@ -299,6 +316,7 @@
 		}
 
 		function call(){
+			var svgOutput = "" // clear svgOutput before each addition to the stack
 			var rawText = document.getElementById("functioncall").value;
 			var mainArray = rawText.split("."); // need error checking
 			var paraText = mainArray[1].split(";"); // need error checking
@@ -322,26 +340,34 @@
 			//window.alert(xPos + " " + yPos);
 			var retString = "";
 			// loop over all members in "functions" and generate one long svg string for them
+			xPos = xAnchor // reinitialize the xPosition to the anchor
+			yPos = yAnchor
 			for(var i = functions.length - 1; i >= 0; i--){
 				retString += functions[i].draw(xPos,yPos);
-				yPos += 20;
-				xPos += functions[i].nameLength();
-				//window.alert(xPos + " " + yPos);
+
+				var xTemp = xPos
+				var yTemp = yPos
+				xTemp += functions[i].nameLength();
+				yTemp += 20;
+
 				//Loop over parameters
-				var temp = xPos;
 				for(var j=0; j < functions[i].para.length; j++){
-					retString += functions[i].para[j].draw(temp,yPos);
-					temp += functions[i].para[j].widthTot();
-				}
-				yPos += functions[i].charHeight + 5;
-				temp = yPos;
-				for(var j=0; j < functions[i].local.length; j++){
-					retString += functions[i].local[j].draw(xPos,temp);
-					temp += functions[i].local[j].charHeight;
+					retString += functions[i].para[j].draw(xTemp,yTemp);
+					xTemp += functions[i].para[j].widthTot();
 				}
 
+				// Loop over locals
+				xTemp = xPos
+				yTemp = yPos + functions[i].charHeight + 25;
+				for(var j=0; j < functions[i].local.length; j++){
+					retString += functions[i].local[j].draw(xTemp,yTemp);
+					yTemp += functions[i].local[j].charHeight;
+				}
+
+				yPos += functions[i].heightOfBox() + 15;
 			}
-            return retString;
+
+      return retString;
     }
 
 		/** Saves svg output in plaintext to a file specified by the user
