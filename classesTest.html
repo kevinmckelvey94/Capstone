@@ -44,7 +44,7 @@
 
 	*** DONE: Fix function stack so that multiple drawings are on top of one another (stack grows up)***
 
-	Function return animation
+	*** DONE: Function return
 
 	Presence of newline indicates new function. So this way we can make multiple function calls
 		in one go, rather than calling functions once at a time. Function calls go from first to last,
@@ -268,13 +268,18 @@
 
 		// Function called to remove the last 'function' placed on the call stack
 		function returnFun(){
-			functions = [];
-			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
-			svgOutput += drawFunction();
-			svgOutput += "</svg>";
+			if (functions.length != 0) {
+				svgOutput = "";
+				functions.pop();
+				svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">";
+				svgOutput += drawFunction();
+				svgOutput += "</svg>";
 
-			console.log(svgOutput);
-			document.getElementById("out").innerHTML = svgOutput;
+				console.log(svgOutput);
+				document.getElementById("out").innerHTML = svgOutput;
+			} else {
+				window.alert("No function calls on stack!");
+			}
 		}
 
 		// takes variable from (example) 'x=3' to an Var object
