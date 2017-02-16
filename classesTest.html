@@ -20,7 +20,7 @@
 
 
 	***08 FEB2017 ***
-	Use monospaced fixed-width font
+	*** DEPRECATED: Use monospaced fixed-width font
 
 	*** DONE: Get bbox for text and then use that to create larger bounding box for function
 
@@ -30,7 +30,7 @@
 
 
 	*** 09FEB2017 ***
-	Nested objects
+	FUNCTIONALITY: Nested objects
 
 	*** DONE: Fix padding between name and value within parameters. Make it tight so they look
 		like they are associated with one another
@@ -40,7 +40,7 @@
 
 	FIX: Heap elements overlap with each other
 
-	FIX: Heap elements overlap with stack elements
+	*** DONE: BUG: Heap elements overlap with stack elements
 
 	*** DONE: Draw pointer arrow from center of box to middle of lefthand boundary
 
@@ -48,12 +48,14 @@
 
 	*** DONE: Function return
 
-	Presence of newline indicates new function. So this way we can make multiple function calls
+	*** DONE: Presence of newline indicates new function. So this way we can make multiple function calls
 		in one go, rather than calling functions once at a time. Function calls go from first to last,
 		top to bottom
 
 	Have ability to define structs within the function stack as well as the heap. If "point" is specified,
 		place within the stack. If "newpoint or new" is specified, put it in the heap.
+
+	*** DONE: Local variables do not change the proper width of the bounding box.
 
 -->
 
@@ -74,7 +76,8 @@
 		var xPos = 0;				// x-position used as an "anchor" for the newest function
 		var yPos = 0;				// y-position used as an "anchor" for the newest function
 		var offest = 5;			// Offset value used for padding within/between containers
-		var padding = 40;		// Padding between function calls on the stack
+		var padding = 25;		// Padding between function calls on the stack
+		var heapOffset = 0; // used to calculate y position of objects on the heap
 		/** End Global Variables **/
 
 		/******************************************************************/
@@ -121,9 +124,24 @@
 			}
 
 			widthOfBox(){
-				var width = this.offset*4; 							// initialize width to 10 pixels
-				width += this.nameLength(); // add length of function name to width total
-				for(var i = 0; i < this.para.length; i++){ width += this.para[i].widthTot(); }
+				var width = 0; // variable to be returned
+
+				// Get width of name and all parameters
+				var paramWidth = this.offset*4; 							// initialize width to 10 pixels
+				paramWidth += this.nameLength(); // add length of function name to width total
+				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); }
+
+				// loop over all variables and get the longest variable name
+				var varWidth = 0;
+				for (var i = 0; i < this.local.length; i++) {
+					if (this.local[i].width > varWidth) {
+						varWidth = this.local[i].width;
+					}
+				}
+
+				// compare nameWidth and varWidth, longest one wins
+				if (paramWidth >= varWidth) { width = paramWidth + this.offset*3; }
+				else { width = varWidth + this.offset*4; }
 				return width;
 			}
 
@@ -137,7 +155,8 @@
 
 				x += this.nameLength() - 15;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ( </text>";
-				x += this.widthOfBox() - this.nameLength() - this.offset*2;
+				for(var i = 0; i < this.para.length; i++){ x += this.para[i].widthTot(); }
+				x += this.offset*2;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ) </text>";
 				return retString;
 			}
@@ -185,8 +204,9 @@
 			}
 
 			// Receives current xPos and yPos from drawFunction()
-			draw(x,y){
+			draw(x,y,xAnchor,yAnchor){
 				var retString = "";
+
 				var xKey = x + 10		// x-position for text
 				var yKey = y				// y-position for text
 				var xBox = x + 27.5	// x-position for box
@@ -204,9 +224,18 @@
 				x1 = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
 				y1 = yBox + 11.25 // same as x-axis center, but on the y-axis
 
+				// Calculate x coordinate anchor for heap elements
+				for (var i = 0; i < functions.length; i++) {
+					if (functions[i].widthOfBox() > x) { x = functions[i].widthOfBox() + 40 }
+				}
+
+				console.log(heapOffset);
+
 				// Draw name and bounding box on the *heap*
-				x += 200; // this value will need to change dynamically based on the width of the function bounding box that calls it
-				y = y; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
+				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
+				heapOffset += this.heightOfBox() + this.offset; // set heapoffset for the next heap element
+
+				console.log(heapOffset);
 
 				// draw bounding box for heap object
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
@@ -264,7 +293,7 @@
 				return this.name.length*this.charWidth + 10;
 			}
 
-			draw(x,y){
+			draw(x,y,xAnchor,yAnchor){
 				//window.alert(x + " " + y);
 				x += 10
 				var xBox = x + this.widthName() - this.offset;
@@ -370,7 +399,7 @@
 
 				//Loop over parameters
 				for(var j=0; j < functions[i].para.length; j++){
-					retString += functions[i].para[j].draw(xTemp,yTemp);
+					retString += functions[i].para[j].draw(xTemp,yTemp,xPos,yPos);
 					xTemp += functions[i].para[j].widthTot();
 				}
 
@@ -378,13 +407,15 @@
 				xTemp = xPos
 				yTemp = yPos + functions[i].charHeight + 25;
 				for(var j=0; j < functions[i].local.length; j++){
-					retString += functions[i].local[j].draw(xTemp,yTemp);
+					retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos,heapOffset);
 					yTemp += functions[i].local[j].charHeight;
 				}
 
 				// Changes spacing between function calls on the stack. This will eventually
 				// need to be dynamic, changing based on the number of objects on the heap.
-				yPos += functions[i].heightOfBox() + padding;
+				//yPos += functions[i].heightOfBox() + padding + heapOffset;
+				yPos += heapOffset + padding;
+				heapOffset = 0;
 			}
 
       return retString;
