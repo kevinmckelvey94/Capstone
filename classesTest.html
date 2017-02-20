@@ -1,65 +1,3 @@
-
-<!--Capstone Group 7: Hackstreet Boys -->
-<!--Code Visualizer -->
-<!--John Bryant, Eric Collins, Kevin McKelvey, Dominic Scott -->
-<!-- Begin HTML -->
-
-<!-- Notes:
-
-	*** 27JAN2017 ***
-	Embed Javascript in seperate files
-
-	Find package in Atom (Javascript interpreter)
-
-	*** DONE: Clear button used to clear drawing
-
-	*** IGNORE: String dimensions: getBBox - use to get Javascript bounding box of an SVG text element
-
-	Have previous function calls stored on the page so that
-	we can recreate the drawing quickly and edit functions
-
-
-	***08 FEB2017 ***
-	*** DEPRECATED: Use monospaced fixed-width font
-
-	*** DONE: Get bbox for text and then use that to create larger bounding box for function
-
-	*** DONE: Make all parameter and local boxes scalable
-
-	*** DONE: Fix offset value
-
-
-	*** 09FEB2017 ***
-	FUNCTIONALITY: Nested objects
-
-	*** DONE: Fix padding between name and value within parameters. Make it tight so they look
-		like they are associated with one another
-
-	*** DONE: Encapsulate parameters list within parentheses (after function name) so it is clear
-		that they are parameters
-
-	*** DONE: BUG: Heap elements overlap with each other
-
-	*** DONE: BUG: Heap elements overlap with stack elements
-
-	*** DONE: Draw pointer arrow from center of box to middle of lefthand boundary
-
-	*** DONE: Fix function stack so that multiple drawings are on top of one another (stack grows up)***
-
-	*** DONE: Function return
-
-	*** DONE: Presence of newline indicates new function. So this way we can make multiple function calls
-		in one go, rather than calling functions once at a time. Function calls go from first to last,
-		top to bottom
-
-	Have ability to define structs within the function stack as well as the heap. If "point" is specified,
-		place within the stack. If "newpoint or new" is specified, put it in the heap.
-
-	*** DONE: Local variables do not change the proper width of the bounding box.
-
--->
-
-<!-- HTML Begin -->
 <html lang="en">
 <head>
     <title>Rough Draft - Master</title>
@@ -494,53 +432,55 @@
 <!-- End HTML head -->
 
 <!-- Begin HTML body -->
-<body>
-    <div>
-        <!--Header-->
-        <div class="header">Master</div>
+<body class="outer">
 
-        <!--Input-->
-        <div class="input">
-					<p>Type code in the text field.</p>
-          <p>Ex:</p>
-          <p>main.x=3;y=2.a=1;b=2</p>
-					<p>Example with an Object:</p>
-					<p>main.x=3;y=2.a=1;b=point(x=1,y=1)</p>
 
-					Function Call: <textarea id="functioncall" rows="5" cols="35"></textarea>
+    <!--Header-->
+    <div class="header">Code Visualizer</div>
 
-					<br>
-
-					<button onclick="call()"> Function Call </button>
-
-		    	<br><br>
-
-					<button onclick="returnFun()"> Return </button>
-
-					<br><br>
-
-					<button onclick="clearStack()"> Clear Stack </button>
-
-					<br><br>
-
-		      FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
-					<button onclick="saveTextAsFile()"> Save to File </button>
-
-      </div>
-
-			<!-- SVG Output goes here -->
-      <div  class="output">
-      	<div id ="out"> </div>
-      </div>
-
-      <!--FOOTER-->
-      <div class="footer">
-        <b>Hackstreet Boys</b> - Capstone<br/>
-      </div>
-
+    <!-- SVG Output goes here -->
+    <div class="output">
+      <div class="innerHeader" id ="out">Output</div>
     </div>
 
-    <div id="test"> </div>
+    <br class="clearboth">
+
+    <!-- instructional div (mostly for symmetry) -->
+    <div class="info">
+      <div class="innerHeader">Instructions</div>
+      <img class="img" src="images/logo.png" />
+      <p>Type code in the text field.</p>
+      <p>Ex: main.x=3;y=2.a=1;b=2</p>
+      <p>Example with an Object:</p>
+      <p>main.x=3;y=2.a=1;b=point(x=1,y=1)</p>
+
+
+      FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
+      <button onclick="saveTextAsFile()"> Save to File </button>
+    </div>
+
+    <!--Input-->
+    <div class="input">
+      <div class="innerHeader">Input</div>
+      <br>
+      Function Call: <textarea id="functioncall" rows="5" cols="35"></textarea>
+      <button onclick="call()"> Function Call </button>
+
+      <br><br>
+      <button onclick="returnFun()"> Return </button>
+
+      <br><br>
+      <button onclick="clearStack()"> Clear Stack </button>
+    </div>
+
+    <br class="clearboth">
+
+    <!--FOOTER-->
+    <div class="footer">
+      <b>Hackstreet Boys</b> - Capstone<br/>
+    </div>
+
+
 
 </body>
 </html>
