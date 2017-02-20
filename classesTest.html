@@ -1,3 +1,69 @@
+
+<!--Capstone Group 7: Hackstreet Boys -->
+<!--Code Visualizer -->
+<!--John Bryant, Eric Collins, Kevin McKelvey, Dominic Scott -->
+<!-- Begin HTML -->
+
+<!-- Notes:
+
+	*** 27JAN2017 ***
+	Embed Javascript in seperate files
+
+	Find package in Atom (Javascript interpreter)
+
+	*** DONE: Clear button used to clear drawing
+
+	*** IGNORE: String dimensions: getBBox - use to get Javascript bounding box of an SVG text element
+
+	Have previous function calls stored on the page so that
+	we can recreate the drawing quickly and edit functions
+
+
+	***08 FEB2017 ***
+	*** DEPRECATED: Use monospaced fixed-width font
+
+	*** DONE: Get bbox for text and then use that to create larger bounding box for function
+
+	*** DONE: Make all parameter and local boxes scalable
+
+	*** DONE: Fix offset value
+
+
+	*** 09FEB2017 ***
+	FUNCTIONALITY: Nested objects
+
+	*** DONE: Fix padding between name and value within parameters. Make it tight so they look
+		like they are associated with one another
+
+	*** DONE: Encapsulate parameters list within parentheses (after function name) so it is clear
+		that they are parameters
+
+	*** DONE: BUG: Heap elements overlap with each other
+
+	*** DONE: BUG: Heap elements overlap with stack elements
+
+	*** DONE: Draw pointer arrow from center of box to middle of lefthand boundary
+
+	*** DONE: Fix function stack so that multiple drawings are on top of one another (stack grows up)***
+
+	*** DONE: Function return
+
+	*** DONE: Presence of newline indicates new function. So this way we can make multiple function calls
+		in one go, rather than calling functions once at a time. Function calls go from first to last,
+		top to bottom
+
+	FUNCTIONALITY: Have ability to define structs within the function stack as well as the heap. If "point" is specified,
+		place within the stack. If "newpoint or new" is specified, put it in the heap.
+
+	*** DONE: Local variables do not change the proper width of the bounding box.
+
+	*** DONE BUG: Local variable names overlap pointer boxes if name is longer than 1 character
+
+	*** DONE BUG: Function box does not scale with pointer names
+
+-->
+
+<!-- HTML Begin -->
 <html lang="en">
 <head>
     <title>Rough Draft - Master</title>
@@ -108,8 +174,15 @@
 				super(name);
 				this.variables = vals;
 				this.objName = objName;
-				this.width = 100;
+				this.width = this.widthOfName();
 				this.height = 50;
+			}
+
+			widthOfName(){
+				var width = 0;
+				width += 25;
+				width += this.name.length*this.charWidth;
+				return width;
 			}
 
 			// Calculates height of box using total quantity of variables multiplied by character height
@@ -147,7 +220,7 @@
 
 				var xKey = x + 10		// x-position for text
 				var yKey = y				// y-position for text
-				var xBox = x + 27.5	// x-position for box
+				var xBox = x + 15	// x-position for box
 				var yBox = y - 17.5	// y-position for box
 				var x1 = 0					// x-position for base of pointer
 				var y1 = 0					// y-position for base of pointer
@@ -155,8 +228,10 @@
 				var y2 = 0					// y-position for tip of pointer
 
 				// Draw name and bounding box within *stack*
-				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
 				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
+				xBox += nameWidth
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
 
 				// get origin of object pointer
 				x1 = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
@@ -352,7 +427,8 @@
 				// Changes spacing between function calls on the stack. This will eventually
 				// need to be dynamic, changing based on the number of objects on the heap.
 				//yPos += functions[i].heightOfBox() + padding + heapOffset;
-				yPos += heapOffset + padding;
+				if (heapOffset > functions[i].heightOfBox()) { yPos += heapOffset + padding; }
+				else { yPos += functions[i].heightOfBox() + padding; console.log(yPos); }
 				heapOffset = 0;
 			}
 
