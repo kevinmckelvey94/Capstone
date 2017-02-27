@@ -1,0 +1,117 @@
+
+.outer{
+  /*body attributes
+   *background image
+   *margin parameters
+  */
+    background-image: url("images/blueAbstract1.jpg");
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 10%;
+}
+
+
+.clearboth{
+  /*clears anything on either side
+   *used in <br> tag
+  */
+    clear: both;
+}
+
+.header
+{
+    /*This is the header element
+     *The font should be 30 point and alignment is center
+    */
+    font-size: 30pt;
+    text-align: center;
+}
+
+.innerHeader
+{
+    /*This is the inner header element
+     *The font should be 20 point and alignment is center
+     *background color #7BACE7
+    */
+    font-size: 20pt;
+    text-align: center;
+    background-color: #7BACE7;
+}
+
+.footer
+{
+    /*This is the footer element
+     *The font should be 12 point and alignment is center
+    */
+    font-size: 12pt;
+    text-align: center;
+}
+
+.input
+{
+    /*This is the input div
+     *It floats on the right
+     *background color is white
+     *the height is
+     *the width is 45% of parent div
+     *It has no border
+     *It has 5 pixels of padding on each side
+    */
+    background-color: #ffffff;
+    height: auto;
+    float: right;
+    margin-right: auto;
+    width: 45%;
+    padding: 5px;
+
+}
+
+.info
+{
+    /*This is the input div
+     *It floats on the left
+     *background color is white
+     *the height is
+     *the width is 45% of parent div
+     *It has no border
+     *It has 5 pixels of padding on each side
+    */
+    background-color: #ffffff;
+    height: auto;
+    float: left;
+    margin-left: auto;
+    width: 45%;
+    padding: 5px;
+    text-align: left;
+
+}
+
+.img{
+  float: right;
+  margin: 0px 0px 15px 15px;
+}
+.svg{
+  font-family: "Lucida Console";
+  overflow:auto; 
+}
+.output
+{
+    /*This is an information panel
+     *Its left margin is 310 pixels
+     *It has a left and bottom border that is 1 black pixel
+     *It has 5 pixels of padding on each side
+    */
+  background-color: #ffffff;
+  height: 60%;
+  width: 100%;
+  overflow-x: auto;
+  overflow-x: auto;
+  padding: 5px;
+}
+
+#textbox
+{
+	  font-family: "Lucida Console";
+    height:200px;
+    font-size:14pt;
+}
