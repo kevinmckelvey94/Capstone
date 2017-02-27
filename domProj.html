@@ -1,0 +1,504 @@
+
+<!--Capstone Group 7: Hackstreet Boys -->
+<!--Code Visualizer -->
+<!--John Bryant, Eric Collins, Kevin McKelvey, Dominic Scott -->
+<!-- Begin HTML -->
+
+<!-- Notes:
+	*** 27JAN2017 ***
+	Embed Javascript in seperate files
+	Find package in Atom (Javascript interpreter)
+	*** DONE: Clear button used to clear drawing
+	*** IGNORE: String dimensions: getBBox - use to get Javascript bounding box of an SVG text element
+	Have previous function calls stored on the page so that
+	we can recreate the drawing quickly and edit functions
+	***08 FEB2017 ***
+	*** DEPRECATED: Use monospaced fixed-width font
+	*** DONE: Get bbox for text and then use that to create larger bounding box for function
+	*** DONE: Make all parameter and local boxes scalable
+	*** DONE: Fix offset value
+	*** 09FEB2017 ***
+	*** DONE: Fix padding between name and value within parameters. Make it tight so they look
+		like they are associated with one another
+	*** DONE: Encapsulate parameters list within parentheses (after function name) so it is clear
+		that they are parameters
+	*** DONE: BUG: Heap elements overlap with each other
+	*** DONE: BUG: Heap elements overlap with stack elements
+	*** DONE: Draw pointer arrow from center of box to middle of lefthand boundary
+	*** DONE: Fix function stack so that multiple drawings are on top of one another (stack grows up)***
+	*** DONE: Function return
+	*** DONE: Presence of newline indicates new function. So this way we can make multiple function calls
+		in one go, rather than calling functions once at a time. Function calls go from first to last,
+		top to bottom
+	*** DONE: Local variables do not change the proper width of the bounding box.
+	*** DONE BUG: Local variable names overlap pointer boxes if name is longer than 1 character
+	*** DONE BUG: Function box does not scale with pointer names
+	26 FEB 2017
+	*** KEVIN : All function box widths are equal to the width of the longest function box
+	*** KEVIN : Ability to reference objects up the stack (java)
+	*** DOM : If there are no local variables or parameters, print an empty box. Basically, be able to print with no variables specified
+	*** JOHN : Monospaced font
+	*** JOHN : Scrolling
+	*** ERIC : Arrays
+	C++ compatability - objects within a function instead of a pointer
+		- FUNCTIONALITY: Have ability to define structs within the function stack as well as the heap. If "point" is specified,
+			place within the stack. If "newpoint or new" is specified, put it in the heap.
+	FUNCTIONALITY: Nested objects
+-->
+
+<!-- HTML Begin -->
+<html lang="en">
+<head>
+    <title>Rough Draft - Master</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+		<!-- Begin Javascript -->
+    <script>
+		/** Global Variables **/
+		var functions = []; // Array stores all user-defined functions
+		var svgOutput = ""; // Stores entire svg string used for display and output
+		var xAnchor = 10;		// Base x-position used as an "anchor" for the display
+		var yAnchor = 10;		// Base y-position used as an "anchor" for the display
+		var xPos = 0;				// x-position used as an "anchor" for the newest function
+		var yPos = 0;				// y-position used as an "anchor" for the newest function
+		var offest = 5;			// Offset value used for padding within/between containers
+		var padding = 25;		// Padding between function calls on the stack
+		var heapOffset = 0; // used to calculate y position of objects on the heap
+		var longestFunctionWidth = 0; // tracks the width of the longest function
+		/** End Global Variables **/
+		/******************************************************************/
+		/** Member classes: containers for functions, objects, and vars **/
+		/** Base class used to store all objects (functions and variables)
+			* Contains fields for the name, anchor points, width, height, and offsets
+			* of each member. Anchor and offsets are currently not used, currently replaced
+			* by standardized global anchor/offset values
+			**/
+		class Members{
+			constructor(name){
+				this.name = name;             // name of member
+				//this.width = this.width();  // width of box
+				this.height = this.height();  // height of box
+				this.charWidth = 12.05;       // standard character width
+				this.charHeight = 30;         // standard character height
+				this.offset = 5;              // offset used as "padding" between elements
+			}
+      // Class specific functions
+			width()  { return 1; }
+			height() { return 1; }
+			draw(){}
+		}
+		/** Function class is used to define a "function" which is provided parameters
+			* and local variables by the user.
+			**/
+		class Function extends Members{
+			constructor(name,para,local){
+				super(name);
+				this.para = para; 				// array of parameters (which are members)
+				this.local = local; 			// array of local variables (which are members)
+			}
+			nameLength(){ return this.name.length*this.charWidth + 15; } // length of function name in pixels
+			// Calculate height of box by computing the sum of all characters in the locals array
+			heightOfBox(){
+        if(local == [])
+          return 100;
+				var height = this.offset; // initialize height to 5 pixels
+				for( var i = 0; i < this.local.length + 1; i++){ height += this.charHeight; }
+				return height;
+			}
+			widthOfBox(){
+        if(local == [])
+          return 100;
+				var width = 0; // variable to be returned
+				// Get width of name and all parameters
+				var paramWidth = this.offset*4; 							// initialize width to 10 pixels
+				paramWidth += this.nameLength(); // add length of function name to width total
+				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); }
+				// loop over all variables and get the longest variable name
+				var varWidth = 0;
+				for (var i = 0; i < this.local.length; i++) {
+					if (this.local[i].width > varWidth) {
+						varWidth = this.local[i].width;
+					}
+				}
+				// compare nameWidth and varWidth, longest one wins
+				if (paramWidth >= varWidth) { width = paramWidth + this.offset*3; }
+				else { width = varWidth + this.offset*4; }
+				return width;
+			}
+			// Draw function generates SVG text with the parameters defined in each function.
+			draw(x,y){
+				var retString = ""; // initialize empty string
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() + "\" height=\"" + this.heightOfBox() + "\" style=\"stroke: black; fill:none;\"/>";
+				x += 10; // offset for function name
+				y += 20; // offset for function name
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				x += this.nameLength() - 15;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ( </text>";
+				for(var i = 0; i < this.para.length; i++){ x += this.para[i].widthTot(); }
+				x += this.offset*2;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ) </text>";
+				return retString;
+			}
+		}
+		/** Object class is used to create a pointer to an object that
+			* appears as its own isolated box.
+			*/
+		class Object extends Members{
+			constructor(name,objName,vals){
+				super(name);
+				this.variables = vals;
+				this.objName = objName;
+				this.width = this.widthOfName();
+				this.height = 50;
+			}
+			widthOfName(){
+				var width = 0;
+				width += 25;
+				width += this.name.length*this.charWidth;
+				return width;
+			}
+			// Calculates height of box using total quantity of variables multiplied by character height
+			heightOfBox(){
+				var height = this.offset;
+				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight; }
+				return height;
+			}
+			/* Calculates width of box by comparing the width of the name to the width of the
+				* longest variable name. This ensures that the box width is only determined by the
+				* longest element in the container. */
+			widthOfBox(){
+				var width = this.offset*3; // offset for 3 boundary sides
+				var nameWidth = this.objName.length*this.charWidth; // width equal to width of name
+				// loop over all variables and get the longest variable name
+				var varWidth = 0;
+				for (var i = 0; i < this.variables.length; i++) {
+					if (this.variables[i].width > varWidth) {
+						varWidth = this.variables[i].width;
+					}
+				}
+				// compare nameWidth and varWidth, longest one wins
+				if (nameWidth >= varWidth) { width = nameWidth + this.offset*3; }
+				else { width = varWidth + this.offset*4; }
+				return width;
+			}
+			// Receives current xPos and yPos from drawFunction()
+			draw(x,y,xAnchor,yAnchor){
+				var retString = "";
+				var xKey = x + 10		// x-position for text
+				var yKey = y				// y-position for text
+				var xBox = x + 15	// x-position for box
+				var yBox = y - 17.5	// y-position for box
+				var x1 = 0					// x-position for base of pointer
+				var y1 = 0					// y-position for base of pointer
+				var x2 = 0					// x-position for tip of pointer
+				var y2 = 0					// y-position for tip of pointer
+				// Draw name and bounding box within *stack*
+				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
+				xBox += nameWidth
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+				// get origin of object pointer
+				x1 = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
+				y1 = yBox + 11.25 // same as x-axis center, but on the y-axis
+				// Calculate x coordinate anchor for heap elements
+				for (var i = 0; i < functions.length; i++) {
+					if (functions[i].widthOfBox() > x) { x = functions[i].widthOfBox() + 40 }
+				}
+				console.log(heapOffset);
+				// Draw name and bounding box on the *heap*
+				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
+				heapOffset += this.heightOfBox() + this.offset; // set heapoffset for the next heap element
+				console.log(heapOffset);
+				// draw bounding box for heap object
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
+				// get final coordinates of object pointer
+				x2 = x // lefthand side of the box, this is the end location of the tail pointer
+				y2 = y + this.heightOfBox()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
+				// Draw name of object
+				x += 10;
+				y += 20;
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
+				// Draw line pointer from middle of stack box to left-center of heap box
+				retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+				// Draw local variables
+				y += 10;
+				for (var i = 0; i < this.variables.length; i++){
+					y += this.variables[i].height;
+					retString += this.variables[i].draw(x,y);
+					y += 10;
+				}
+				return retString;
+			}
+		}
+		/** Variable class stores a name and a value for individual variables */
+		class Var extends Members{
+			constructor(name,v){
+				super(name);
+				this.value = v;
+				this.width = this.widthTot();
+				this.height = 20;
+			}
+			/** Width function calculates the width (in pixels) of the name and value strings
+			 	*These values are added together with the x-offset value to generate the width
+			  *of the container
+				*/
+			widthTot(){
+				var width = 0;
+				width += 25;
+				width += this.name.length*this.charWidth;
+				width += this.value.length*this.charWidth;
+				return width;
+			}
+			widthValue(){
+				var width = 10;
+				width += this.value.length*this.charWidth;
+				return width;
+			}
+			widthName(){
+				return this.name.length*this.charWidth + 10;
+			}
+			draw(x,y,xAnchor,yAnchor){
+				//window.alert(x + " " + y);
+				x += 10
+				var xBox = x + this.widthName() - this.offset;
+				var yBox = y - 17.5
+				var xValue = x + this.widthName();
+				var yValue = y
+				var retString = "";
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthValue() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
+				return retString;
+			}
+		}
+		/** End Member classes containers **/
+		/**************************************************************************/
+		/** Builder classes build arrays, parse input, and generate the SVGOutput **/
+		// takes variable from (example) 'x=3' to an Var object
+		function parseVariable(variable){
+			var sVar = variable.split("=");
+			return new Var(sVar[0],sVar[1]);
+		}
+		// builds an array for the new object in order to store in the Object class
+		function buildObjectArray(variables){
+			var vars = [];
+			for(var i = 0; i < variables.length; i++){
+				var sVar = variables[i].split("=");
+				vars.push(new Var(sVar[0],sVar[1]));
+			}
+			return vars;
+		}
+		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated
+		function newObject(fullObj){
+			parseOne = fullObj.replace('(',' ');
+			parseOne = parseOne.replace(')','');
+			parsedObj = parseOne.split(' ');
+			names = parsedObj[0].split('=')
+			varsArray = buildObjectArray(parsedObj[1].split(','));
+			return new Object(names[0],names[1],varsArray);
+		}
+		// creates an array of variable objects, whether Var or Object, to be used to create the new function
+		function storeVariables(variables){
+			var vars = [];
+			for(var i = 0; i < variables.length; i++){
+				if (/[A-Za-z0-9]*\([A-Za-z0-9=,]*\)/.test(variables[i])){
+					vars.push(newObject(variables[i]));
+				}
+				else {
+					vars.push(parseVariable(variables[i]));
+				}
+			}
+			return vars;
+		}
+   /**
+      **********************
+      DOM'S NEW SHIT
+      **********************
+   **/
+		function call(){
+			var svgOutput = "" // clear svgOutput before each addition to the stack
+			var allFunctions = []; // stores multiple functions seperated by newlines
+			var rawText = document.getElementById("functioncall").value;
+			var funcArray = rawText.split(/\n/);
+
+      for (var i = 0; i < funcArray.length; i++) {
+        funcArray[i].replace(' ','');
+      }
+
+			for (var i = 0; i < funcArray.length; i++) {
+				var mainArray = funcArray[i].split("."); // need error checking
+        for (var i = 0; i < funcArray.length; i++) {
+  				var mainArray = funcArray[i].split("."); // need error checking
+          var paraText = [];
+          if(mainArray[1] != '')
+            paraText = mainArray[1].split(";"); // need error checking ... parse parameters
+          var localText = [];
+          if(mainArray[2] != '')
+            var localText = mainArray[2].split(";"); // need error checking ... parse locals *** objects in here
+				var para = storeVariables(paraText);
+				var local = storeVariables(localText);
+				functions.push(new Function(mainArray[0],para,local)); // used to store all user-defined functions
+			}
+			// generate svg below. "content" is the string used to store the entire svg text
+			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
+			svgOutput += drawFunction();
+			svgOutput += "</svg>";
+			// Populate HTML with svg output
+			console.log(svgOutput);
+			document.getElementById("out").innerHTML = svgOutput;
+		}
+    /**
+       **********************
+       DOM'S NEW SHIT
+       **********************
+    **/
+		// Generates svg text based off of the parsed code passed as an argument
+    function drawFunction(){
+			var retString = ""; // Initialize empty string to be returned (this will end up being svgOutput)
+			// loop over all members in "functions" and generate one long svg string for them
+			xPos = xAnchor // reinitialize the xPosition to the anchor
+			yPos = yAnchor // reinitialize the yPosition to the anchor
+			// Loop over all functions in the array and generate svg output for each of them
+			for(var i = functions.length - 1; i >= 0; i--){
+				retString += functions[i].draw(xPos,yPos);
+				// Use temporary x,y coordinates so that the xPos and yPos are not altered
+				var xTemp = xPos
+				var yTemp = yPos
+				xTemp += functions[i].nameLength();
+				yTemp += 20;
+				//Loop over parameters
+				for(var j=0; j < functions[i].para.length; j++){
+					retString += functions[i].para[j].draw(xTemp,yTemp,xPos,yPos);
+					xTemp += functions[i].para[j].widthTot();
+				}
+				// Loop over locals
+				xTemp = xPos
+				yTemp = yPos + functions[i].charHeight + 25;
+				for(var j=0; j < functions[i].local.length; j++){
+					retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos,heapOffset);
+					yTemp += functions[i].local[j].charHeight;
+				}
+				// Changes spacing between function calls on the stack. This will eventually
+				// need to be dynamic, changing based on the number of objects on the heap.
+				//yPos += functions[i].heightOfBox() + padding + heapOffset;
+				if (heapOffset > functions[i].heightOfBox()) { yPos += heapOffset + padding; }
+				else { yPos += functions[i].heightOfBox() + padding; console.log(yPos); }
+				heapOffset = 0;
+			}
+      return retString;
+    }
+		/**************************************************************************/
+		/** Functions that perform various tasks **/
+		// Function called to remove the last 'function' placed on the call stack
+		function returnFun(){
+			if (functions.length != 0) {
+				svgOutput = "";
+				functions.pop();
+				svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">";
+				svgOutput += drawFunction();
+				svgOutput += "</svg>";
+				console.log(svgOutput);
+				document.getElementById("out").innerHTML = svgOutput;
+			} else {
+				window.alert("No function calls on stack!");
+			}
+		}
+		/** Saves svg output in plaintext to a file specified by the user
+			* Does not save if no output exists or if the filename is not specified
+			*/
+    function saveTextAsFile(){
+      var textToSave = svgOutput
+			var fileNameToSaveAs = document.getElementById("saveFileName").value;
+			if ( textToSave != "" && fileNameToSaveAs != ""){
+				// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+				var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
+				var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+				var downloadLink = document.createElement("a");
+				downloadLink.download = fileNameToSaveAs;
+				downloadLink.innerHTML = "Download File";
+				downloadLink.href = textToSaveAsURL;
+				downloadLink.onclick = destroyClickedElement;
+				downloadLink.style.display = "none";
+				document.body.appendChild(downloadLink);
+				downloadLink.click();
+			}
+			else {
+				if ( textToSave == "" ){
+					window.alert("No output to save");
+				}
+				if (fileNameToSaveAs == "") {
+					window.alert("Please specify a filename")
+				}
+			}
+    }
+		// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+    function destroyClickedElement(event){
+        document.body.removeChild(event.target);
+    }
+		/** ClearStack function resets all arrays and output and reloads the page **/
+		function clearStack(){
+			functions = [];
+			svgOutput = "";
+			document.getElementById("out").innerHTML = svgOutput;
+			window.location.reload();
+		}
+		/** End functions that perform various tasks **/
+    </script>
+		<!-- End Javascript -->
+
+</head>
+<!-- End HTML head -->
+
+<!-- Begin HTML body -->
+<body class="outer">
+
+
+    <!--Header-->
+    <div class="header">Code Visualizer</div>
+
+    <!-- SVG Output goes here -->
+    <div class="output">
+      <div class="innerHeader" id ="out">Output</div>
+    </div>
+
+    <br class="clearboth">
+
+    <!-- instructional div (mostly for symmetry) -->
+    <div class="info">
+      <div class="innerHeader">Instructions</div>
+      <img class="img" src="images/logo.png" />
+      <p>Type code in the text field.</p>
+      <p>Ex: main.x=3;y=2.a=1;b=2</p>
+      <p>Example with an Object:</p>
+      <p>main.x=3;y=2.a=1;b=point(x=1,y=1)</p>
+
+
+      FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
+      <button onclick="saveTextAsFile()"> Save to File </button>
+    </div>
+
+    <!--Input-->
+    <div class="input">
+      <div class="innerHeader">Input</div>
+      <br>
+      Function Call: <textarea id="functioncall" rows="5" cols="35"></textarea>
+      <button onclick="call()"> Function Call </button>
+
+      <br><br>
+      <button onclick="returnFun()"> Return </button>
+
+      <br><br>
+      <button onclick="clearStack()"> Clear Stack </button>
+    </div>
+
+    <br class="clearboth">
+
+    <!--FOOTER-->
+    <div class="footer">
+      <b>Hackstreet Boys</b> - Capstone<br/>
+    </div>
+
+
+
+</body>
+</html>
