@@ -30,7 +30,6 @@
 
 
 	*** 09FEB2017 ***
-	FUNCTIONALITY: Nested objects
 
 	*** DONE: Fix padding between name and value within parameters. Make it tight so they look
 		like they are associated with one another
@@ -52,15 +51,31 @@
 		in one go, rather than calling functions once at a time. Function calls go from first to last,
 		top to bottom
 
-	FUNCTIONALITY: Have ability to define structs within the function stack as well as the heap. If "point" is specified,
-		place within the stack. If "newpoint or new" is specified, put it in the heap.
-
 	*** DONE: Local variables do not change the proper width of the bounding box.
 
 	*** DONE BUG: Local variable names overlap pointer boxes if name is longer than 1 character
 
 	*** DONE BUG: Function box does not scale with pointer names
 
+	26 FEB 2017
+
+	*** KEVIN : All function box widths are equal to the width of the longest function box
+
+	*** KEVIN : Ability to reference objects up the stack (java)
+
+	*** DOM : If there are no local variables or parameters, print an empty box. Basically, be able to print with no variables specified
+
+	*** JOHN : Monospaced font
+
+	*** JOHN : Scrolling
+
+	*** ERIC : Arrays
+
+	C++ compatability - objects within a function instead of a pointer
+		- FUNCTIONALITY: Have ability to define structs within the function stack as well as the heap. If "point" is specified,
+			place within the stack. If "newpoint or new" is specified, put it in the heap.
+
+	FUNCTIONALITY: Nested objects
 -->
 
 <!-- HTML Begin -->
@@ -82,6 +97,7 @@
 		var offest = 5;			// Offset value used for padding within/between containers
 		var padding = 25;		// Padding between function calls on the stack
 		var heapOffset = 0; // used to calculate y position of objects on the heap
+		var longestFunctionWidth = 0; // tracks the width of the longest function
 		/** End Global Variables **/
 
 		/******************************************************************/
