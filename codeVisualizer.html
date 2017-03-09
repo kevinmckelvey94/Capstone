@@ -105,7 +105,8 @@
 		var heapOffset = 0; // used to calculate y position of objects on the heap
 		var longestFunctionWidth = 0; // tracks the width of the longest function
 		var totalHeight = 400; // tracks the total height of the svg element
-		/** End Global Variables **/
+		var objectStyle = "java";
+    /** End Global Variables **/
 		/******************************************************************/
 		/** Member classes: containers for functions, objects, and vars **/
 		/** Base class used to store all objects (functions and variables)
@@ -256,10 +257,10 @@
 				var yKey = y				// y-position for text
 				var xBox = x + 15	// x-position for box
 				var yBox = y - 17.5	// y-position for box
-				var x1 = 0					// x-position for base of pointer
-				var y1 = 0					// y-position for base of pointer
-				var x2 = 0					// x-position for tip of pointer
-				var y2 = 0					// y-position for tip of pointer
+				var pxb = 0					// x-position for base of pointer
+				var pyb = 0					// y-position for base of pointer
+				var pxt = 0					// x-position for tip of pointer
+				var pyt = 0					// y-position for tip of pointer
 
 				// Draw name and bounding box within *stack*
 				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
@@ -267,9 +268,15 @@
 				xBox += nameWidth
 				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
 
-				// get origin of object pointer
-				x1 = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
-				y1 = yBox + 11.25 // same as x-axis center, but on the y-axis
+        // get origin of object pointer
+				if(objectStyle == "java"){
+          pxb = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
+  				pyb = yBox + 11.25 // same as x-axis center, but on the y-axis
+        }
+        else{
+          pxb = xBox + 22.5;// x-axis center of value box on the stack, this is the origin of the line pointer
+  				pyb = yBox; // same as x-axis center, but on the y-axis
+        }
 
 				// Calculate x coordinate anchor for heap elements
 				for (var i = 0; i < functions.length; i++) {
@@ -291,8 +298,14 @@
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
 
 				// get final coordinates of object pointer
-				x2 = x // lefthand side of the box, this is the end location of the tail pointer
-				y2 = y + this.heightOfBox()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
+        if(objectStyle == "java"){
+          pxt = x // lefthand side of the box, this is the end location of the tail pointer
+  				pyt = y + this.heightOfBox()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
+        }
+        else{
+  				pxt = x;// lefthand side of the box, this is the end location of the tail pointer
+  				pyt = y; // calculate y-axis center of the bounding box, end location of the tail pointer
+        }
 
 				// Draw name of object
 				x += 10;
@@ -300,7 +313,15 @@
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
 
 				// Draw line pointer from middle of stack box to left-center of heap box
-				retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+				retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyb + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+
+        if(objectStyle == "c++"){
+  				pyb = yBox + 22.5;
+  				pyt = this.heightOfBox() +  10;
+          // Draw line pointer from middle of stack box to left-center of heap box
+  				retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
+        }
+
 
 				// Draw line pointer to all reference boxes
 				for (var i = 0; i < references.length; i++) {
@@ -321,8 +342,8 @@
 					y += 10;
 				}
 
-				this.xHeapLoc = x2;
-				this.yHeapLoc = y2;
+				this.xHeapLoc = pxt;
+				this.yHeapLoc = pyt;
 
 				return retString;
 			}
@@ -716,6 +737,38 @@
 			document.getElementById("out").innerHTML = svgOutput;
 			window.location.reload();
 		}
+
+    //DropDown functions
+    function dropTop() {
+        document.getElementById("myDropdown").classList.toggle("show");
+    }
+
+    function dropChooseJ(){
+      document.getElementById("drop").innerHTML="Java Object Style";
+      objectStyle = "java";
+    }
+
+    function dropChooseC(){
+      document.getElementById("drop").innerHTML="C++ Object Style";
+      objectStyle = "c++";
+    }
+
+    // Close the dropdown menu if the user clicks outside of it
+    window.onclick = function(event) {
+      if (!event.target.matches('.dropbtn')) {
+
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+          var openDropdown = dropdowns[i];
+          if (openDropdown.classList.contains('show')) {
+            openDropdown.classList.remove('show');
+          }
+        }
+      }
+    }
+
+
 		/** End functions that perform various tasks **/
     </script>
 		<!-- End Javascript -->
@@ -732,7 +785,8 @@
 
     <!-- SVG Output goes here -->
     <div class="output">
-      <div class="innerHeader" id ="out">Output</div>
+      <div class="innerHeader">Output</div>
+      <div id="out"></div>
     </div>
 
     <br class="clearboth">
@@ -755,6 +809,17 @@
     <div class="input">
       <div class="innerHeader">Input</div>
       <br>
+
+
+      <div class="dropdown">
+        <button id="drop" onclick="dropTop()" class="dropbtn">Choose an Object Style</button>
+        <div id="myDropdown" class="dropdown-content">
+          <span onclick="dropChooseC()" value="c++">C++</span>
+          <span onclick="dropChooseJ()" value="java">Java</span>
+        </div>
+      </div>
+
+      <br><br>
       Function Call: <textarea id="functioncall" rows="5" cols="35"></textarea>
       <button onclick="call()"> Function Call </button>
 
@@ -776,5 +841,3 @@
 
 </body>
 </html>
-Contact GitHub API Training Shop Blog About
-© 2017 GitHub, Inc. Terms Privacy Security Status Help
