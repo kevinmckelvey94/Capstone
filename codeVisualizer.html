@@ -145,7 +145,7 @@
 				this.variables = vals;
 				this.objName = objName;
 				this.width = this.widthOfName();
-				this.height = 50;
+				this.height = 20;
 			}
 			widthOfName(){
 				var width = 0;
@@ -206,6 +206,9 @@
 				heapOffset += this.heightOfBox() + this.offset; // set heapoffset for the next heap element
 				console.log(heapOffset);
 				// draw bounding box for heap object
+				if ( xAnchor > 1){
+					x += 100;
+				}
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
 				// get final coordinates of object pointer
 				x2 = x // lefthand side of the box, this is the end location of the tail pointer
@@ -220,7 +223,7 @@
 				y += 10;
 				for (var i = 0; i < this.variables.length; i++){
 					y += this.variables[i].height;
-					retString += this.variables[i].draw(x,y);
+					retString += this.variables[i].draw(x,y,2,0);
 					y += 10;
 				}
 				return retString;
@@ -395,7 +398,7 @@
 				functions.push(new Function(mainArray[0],para,local)); // used to store all user-defined functions
 			}
 			// generate svg below. "content" is the string used to store the entire svg text
-			svgOutput += "<svg x=\"0\" y=\"0\" width=\"400\" height=\"400\">"
+			svgOutput += "<svg x=\"0\" y=\"0\" width=\"800\" height=\"400\">"
 			svgOutput += drawFunction();
 			svgOutput += "</svg>";
 			// Populate HTML with svg output
