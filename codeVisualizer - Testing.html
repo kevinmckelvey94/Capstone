@@ -81,8 +81,7 @@
 		class Members{
 			constructor(name){
 				this.name = name;             // name of member
-				//this.width = this.width();  // width of box
-				this.height = this.height();  // height of box
+				//this.width = this.width();  // width of box  // height of box
 				this.charWidth = 12.05;       // standard character width
 				this.charHeight = 30;         // standard character height
 				this.offset = 5;              // offset used as "padding" between elements
@@ -91,6 +90,7 @@
 			width()  { return 1; }
 			heightOfBox() { return this.charHeight; }
 			getName() { return this.name; }
+			getType() { return 'Members'; }
 			draw(){}
 		}
 		/** Function class is used to define a "function" which is provided parameters
@@ -107,7 +107,10 @@
 			// Calculate height of box by computing the sum of all characters in the locals array
 			heightOfBox(){
 				var height = this.offset; // initialize height to 5 pixels
-				for( var i = 0; i < this.local.length + 1; i++){ height += this.local[i].heightOfBox(); }
+				for( var i = 0; i < this.local.length; i++){ 
+					height += this.local[i].heightOfBox(); 
+				}
+				height += this.charHeight;
 				return height;
 			}
 			widthOfBox(){
@@ -160,7 +163,8 @@
 				this.yHeapLoc; // y-coordinate of heap object
 					
 			}
-			getObjName() { return this.name; }
+			getType() { return 'Object'; }
+			getName() { return this.name; }
 			widthTot(){
 				var width = 0;
 				width += 25;
@@ -174,10 +178,16 @@
 				width += this.name.length*this.charWidth;
 				return width;
 			}
+			heightOfObj(){
+				var height = this.offset;
+				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight;}
+				return height;
+			}
 			// Calculates height of box using total quantity of variables multiplied by character height
 			heightOfBox(){
+				if ( objectStyle == 'java') { return this.charHeight; }
 				var height = this.offset;
-				for( var i = 0; i < this.variables.length + 1; i++){ height += this.variables[i].heightOfBox(); }
+				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight;}
 				return height;
 			}
 			/* Calculates width of box by comparing the width of the name to the width of the
@@ -234,17 +244,17 @@
 				//console.log(heapOffset);
 				// Draw name and bounding box on the *heap*
 				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
-				heapOffset += this.heightOfBox() + this.offset; // set heapoffset for the next heap element
+				heapOffset += this.heightOfObj() + this.offset; // set heapoffset for the next heap element
 				//console.log(heapOffset);
 				// draw bounding box for heap object
 				if ( xAnchor > 1){
 					x += 100;
 				}
-				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfObj() +"\" style=\"stroke: black; fill:none;\"/>";
 				// get final coordinates of object pointer
 				if(objectStyle == "java"){
 					pxt = x // lefthand side of the box, this is the end location of the tail pointer
-					pyt = y + this.heightOfBox()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
+					pyt = y + this.heightOfObj()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
 				}
 				else{
 					pxt = x;// lefthand side of the box, this is the end location of the tail pointer
@@ -289,6 +299,7 @@
 				this.width = this.widthTot();
 				this.height = 20;
 			}
+			getType() { return 'Var'; }
 			getName(){ return this.name; }
 			/** Width function calculates the width (in pixels) of the name and value strings
 			 	*These values are added together with the x-offset value to generate the width
@@ -309,6 +320,7 @@
 			widthName(){
 				return this.name.length*this.charWidth + 10;
 			}
+			heightOfBox() { return this.charHeight; }
 			draw(x,y,xAnchor,yAnchor){
 				//window.alert(x + " " + y);
 				x += 10
@@ -332,6 +344,7 @@
 				this.xFin = x;
 				this.yFin = y;
 			}
+			getType() { return 'RefVar'; }
 			draw(x,y,xAnchor,yAnchor){
 				x += 10
 				var xBox = x + this.widthName() - this.offset;
@@ -353,6 +366,7 @@
 				super(name);
 				this.elements = elements;
 			}
+			getType() { return 'Array'; }
 			draw(x,y,xAnchor,yAnchor){
 				var retString = "";
 				var xKey = x + 10		// x-position for text
@@ -448,41 +462,47 @@
 			return new referenceObject(refObj.name,refObj.objName,refObj.variables,refObj.xHeapLoc,refObj.yHeapLoc);
 		}
 		function newReference(obj,f){
+			console.log(f);
 			varSearch = obj.slice(obj.indexOf('@')+1,obj.length)
 			for(var i = 0; i<functions[f-1].para.length; i++){
-				if (functions[f-1].para[i] isinstance Object && varSearch == functions[f-1].para[i].getName()){
+				if (functions[f-1].para[i].getType() == 'Object' && varSearch == functions[f-1].para[i].getName()){
 					var loc = functions[f-1].para[i].getPointer();
 					return RefVar(varSearch,loc[0],loc[1]);
 				}
 			}
 			for(var i = 0; i<functions[f-1].local.length; i++){
-				if (functions[f-1].local[i] isinstanceo Object && varSearch == functions[f-1].local.getName()){
+				console.log(functions[f-1]);
+				if (functions[f-1].local[i].getType() == 'Object' && varSearch == functions[f-1].local.getName()){
+					console.log(functions[f-1]);
 					var loc = functions[f-1].local[i].getPointer();
 					return RefVar(varSearch,loc[0],loc[1]);
 				}
 			}
+			return 0;
 		}
 		// creates an array of variable objects, whether Var or Object, to be used to create the new function
 		function storeVariables(variables,f){
+			//console.log(variables.length);
 			var vars = [];
 			for(var i = 0; i < variables.length; i++){
 				if (/[A-Za-z0-9]*=array\([A-Za-z0-9,]*\)/.test(variables[i])){
 					vars.push(newArray(variables[i]));
 				}
 				else if (/[A-Za-z0-9]*=@[A-Za-z0-9]/.test(variables[i])){
-					var temp = newReferance(variables[i]);
-				    if ( temp != null){
+					var temp = newReference(variables[i],f);
+				    if ( temp != 0){
 						vars.push(temp);
 					}
 				}
 				else if (/[A-Za-z0-9]*\([A-Za-z0-9=,]*\)/.test(variables[i])){
-					vars.push(newObject(variables[i]),f);
+					vars.push(newObject(variables[i]));
 				}
 				else if (/[A-Za-z0-9]*=[A-Za-z0-9]/.test(variables[i])){
 					vars.push(parseVariable(variables[i]));
 				}
-				//console.log(vars);
+				console.log(vars);
 			}
+			
 			return vars;
 		}
 		function call(){
@@ -546,6 +566,7 @@
 				xTemp = xPos
 				yTemp = yPos + functions[i].charHeight + 25;
 				for(var j=0; j < functions[i].local.length; j++){
+					console.log(functions[i].local[j]);
 					retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos);
 					yTemp += functions[i].local[j].charHeight;
 				}
