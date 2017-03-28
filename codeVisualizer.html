@@ -1,86 +1,50 @@
-
 <!--Capstone Group 7: Hackstreet Boys -->
 <!--Code Visualizer -->
 <!--John Bryant, Eric Collins, Kevin McKelvey, Dominic Scott -->
 <!-- Begin HTML -->
 
 <!-- Notes:
-
 	*** 27JAN2017 ***
 	Embed Javascript in seperate files
-
 	Find package in Atom (Javascript interpreter)
-
 	*** DONE: Clear button used to clear drawing
-
 	*** IGNORE: String dimensions: getBBox - use to get Javascript bounding box of an SVG text element
-
 	Have previous function calls stored on the page so that
 	we can recreate the drawing quickly and edit functions
-
-
 	***08 FEB2017 ***
 	*** DEPRECATED: Use monospaced fixed-width font
-
 	*** DONE: Get bbox for text and then use that to create larger bounding box for function
-
 	*** DONE: Make all parameter and local boxes scalable
-
 	*** DONE: Fix offset value
-
-
 	*** 09FEB2017 ***
-
 	*** DONE: Fix padding between name and value within parameters. Make it tight so they look
 		like they are associated with one another
-
 	*** DONE: Encapsulate parameters list within parentheses (after function name) so it is clear
 		that they are parameters
-
 	*** DONE: BUG: Heap elements overlap with each other
-
 	*** DONE: BUG: Heap elements overlap with stack elements
-
 	*** DONE: Draw pointer arrow from center of box to middle of lefthand boundary
-
 	*** DONE: Fix function stack so that multiple drawings are on top of one another (stack grows up)***
-
 	*** DONE: Function return
-
 	*** DONE: Presence of newline indicates new function. So this way we can make multiple function calls
 		in one go, rather than calling functions once at a time. Function calls go from first to last,
 		top to bottom
-
 	*** DONE: Local variables do not change the proper width of the bounding box.
-
 	*** DONE BUG: Local variable names overlap pointer boxes if name is longer than 1 character
-
 	*** DONE BUG: Function box does not scale with pointer names
-
 	26 FEB 2017
-
 	*** DONE : All function box widths are equal to the width of the longest function box
-
 	*** DONE : Ability to reference objects up the stack (java)
-
 	*** DOM : If there are no local variables or parameters, print an empty box. Basically, be able to print with no variables specified
-
 	*** DONE : Monospaced font and blue-space
-
 	*** DONE : Scrolling
-
 	*** DONE : Arrays
-
 	*** DONE : Clear input box after enter
-
 	C++ compatability - objects within a function instead of a pointer
 		- FUNCTIONALITY: Have ability to define structs within the function stack as well as the heap. If "point" is specified,
 			place within the stack. If "newpoint or new" is specified, put it in the heap.
-
 	*** DONE : Nested objects
-
 	08MAR2017
-
 	*** REFERENCES : BUG : Pointers will go crazy on function returns, they start pointing to random stuff
 -->
 
@@ -106,7 +70,7 @@
 		var longestFunctionWidth = 0; // tracks the width of the longest function
 		var totalHeight = 400; // tracks the total height of the svg element
 		var objectStyle = "java";
-    /** End Global Variables **/
+        /** End Global Variables **/
 		/******************************************************************/
 		/** Member classes: containers for functions, objects, and vars **/
 		/** Base class used to store all objects (functions and variables)
@@ -117,19 +81,18 @@
 		class Members{
 			constructor(name){
 				this.name = name;             // name of member
-				//this.width = this.width();  // width of box
-				this.height = this.height();  // height of box
+				//this.width = this.width();  // width of box  // height of box
 				this.charWidth = 12.05;       // standard character width
 				this.charHeight = 30;         // standard character height
 				this.offset = 5;              // offset used as "padding" between elements
 			}
       // Class specific functions
 			width()  { return 1; }
-			height() { return 1; }
-			getName() {}
+			heightOfBox() { return this.charHeight; }
+			getName() { return this.name; }
+			getType() { return 'Members'; }
 			draw(){}
 		}
-
 		/** Function class is used to define a "function" which is provided parameters
 			* and local variables by the user.
 			**/
@@ -139,15 +102,15 @@
 				this.para = para; 				// array of parameters (which are members)
 				this.local = local; 			// array of local variables (which are members)
 			}
-
 			getName() { return this.name ; }
-
 			nameLength(){ return this.name.length*this.charWidth + 15; } // length of function name in pixels
-
 			// Calculate height of box by computing the sum of all characters in the locals array
 			heightOfBox(){
 				var height = this.offset; // initialize height to 5 pixels
-				for( var i = 0; i < this.local.length + 1; i++){ height += this.charHeight; }
+				for( var i = 0; i < this.local.length; i++){ 
+					height += this.local[i].heightOfBox(); 
+				}
+				height += this.charHeight;
 				return height;
 			}
 			widthOfBox(){
@@ -156,7 +119,6 @@
 				var paramWidth = this.offset*4; 							// initialize width to 10 pixels
 				paramWidth += this.nameLength(); // add length of function name to width total
 				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); }
-
 				// loop over all variables and get the longest variable name
 				var varWidth = 0;
 				for (var i = 0; i < this.local.length; i++) {
@@ -164,26 +126,21 @@
 						varWidth = this.local[i].width;
 					}
 				}
-
 				// compare nameWidth and varWidth, longest one wins
 				if (paramWidth >= varWidth) { width = paramWidth + this.offset*3; }
 				else { width = varWidth + this.offset*4; }
-
 				// use longest width in the function stack for uniformity
 				if (width >= longestFunctionWidth) { longestFunctionWidth = width; }
 				else { width = longestFunctionWidth; }
-
 				return width;
 			}
 			// Draw function generates SVG text with the parameters defined in each function.
 			draw(x,y){
 				var retString = ""; // initialize empty string
-
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() + "\" height=\"" + this.heightOfBox() + "\" style=\"stroke: black; fill:none;\"/>";
 				x += 10; // offset for function name
 				y += 20; // offset for function name
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
-
 				x += this.nameLength() - 15;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" > ( </text>";
 				for(var i = 0; i < this.para.length; i++){ x += this.para[i].widthTot(); }
@@ -192,7 +149,6 @@
 				return retString;
 			}
 		}
-
 		/** Object class is used to create a pointer to an object that
 			* appears as its own isolated box.
 			*/
@@ -205,11 +161,10 @@
 				this.height = 50;
 				this.xHeapLoc; // x-coordinate of heap object
 				this.yHeapLoc; // y-coordinate of heap object
-				this.isRootObject = true
+					
 			}
-
+			getType() { return 'Object'; }
 			getName() { return this.name; }
-
 			widthTot(){
 				var width = 0;
 				width += 25;
@@ -217,21 +172,24 @@
 				width += 22.5
 				return width;
 			}
-
 			widthOfName(){
 				var width = 0;
 				width += 25;
 				width += this.name.length*this.charWidth;
 				return width;
 			}
-
-			// Calculates height of box using total quantity of variables multiplied by character height
-			heightOfBox(){
-				var height = this.offset;
-				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight; }
+			heightOfObj(){
+				var height = this.offset*2;
+				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight;}
 				return height;
 			}
-
+			// Calculates height of box using total quantity of variables multiplied by character height
+			heightOfBox(){
+				if ( objectStyle == 'java') { return this.charHeight; }
+				var height = this.offset*3;
+				for( var i = 0; i < this.variables.length + 1; i++){ height += this.charHeight;}
+				return height;
+			}
 			/* Calculates width of box by comparing the width of the name to the width of the
 				* longest variable name. This ensures that the box width is only determined by the
 				* longest element in the container. */
@@ -251,180 +209,112 @@
 				return width;
 			}
 			// Receives current xPos and yPos from drawFunction()
+			getReferences(xF,yF){
+				for( var i = 0; i<functions.length; i++){
+					for(var j=0; j<functions[i].para.length; j++){
+						if (functions[i].para[j].getType() == 'RefVar' && this.name == functions[i].para[j].getReference()){
+							var loc = functions[i].para[j].getPoint();
+							return "<line x1=\"" + loc[0] + "\" y1=\"" + loc[1] + "\" x2=\"" + xF + "\" y2=\"" + yF + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+						}
+					}
+					for(var j = 0; j<functions[i].local.length; j++){
+						if (functions[i].local[j].getType() == 'RefVar' && this.name == functions[i].local[j].getReference()){
+							var loc = functions[i].para[j].getPoint();
+							return "<line x1=\"" + loc[0] + "\" y1=\"" + loc[1] + "\" x2=\"" + xF + "\" y2=\"" + yF + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+						}
+					}
+				}
+				return "";
+			}
 			draw(x,y,xAnchor,yAnchor){
 				var retString = "";
-				var xKey = x + 10		// x-position for text
+				var xKey = x + 10		    // x-position for text
 				var yKey = y				// y-position for text
-				var xBox = x + 15	// x-position for box
-				var yBox = y - 17.5	// y-position for box
+				var xBox = x + 15	        // x-position for box
+				var yBox = y - 17.5	        // y-position for box
 				var pxb = 0					// x-position for base of pointer
 				var pyb = 0					// y-position for base of pointer
 				var pxt = 0					// x-position for tip of pointer
 				var pyt = 0					// y-position for tip of pointer
-
 				// Draw name and bounding box within *stack*
 				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
 				xBox += nameWidth
-				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
-
-        // get origin of object pointer
+				if ( objectStyle == "java" ){
+					retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+				}
+				// get origin of object pointer
 				if(objectStyle == "java"){
-          pxb = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
-  				pyb = yBox + 11.25 // same as x-axis center, but on the y-axis
-        }
-        else{
-          pxb = xBox + 22.5;// x-axis center of value box on the stack, this is the origin of the line pointer
-  				pyb = yBox; // same as x-axis center, but on the y-axis
-        }
-
+					pxb = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
+					pyb = yBox + 11.25 // same as x-axis center, but on the y-axis
+				}
+				else{
+					pxb = xBox + 22.5;// x-axis center of value box on the stack, this is the origin of the line pointer
+					pyb = yBox; // same as x-axis center, but on the y-axis
+				}
 				// Calculate x coordinate anchor for heap elements
 				for (var i = 0; i < functions.length; i++) {
 					if (functions[i].widthOfBox() > x) { x = functions[i].widthOfBox() + 40 }
 				}
-
-				//console.log(heapOffset);
-
+				//console.log(x);
 				// Draw name and bounding box on the *heap*
-				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
-				heapOffset += this.heightOfBox() + this.offset; // set heapoffset for the next heap element
-
+				y = yAnchor + this.offset;// + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
+				if ( x < 200 ) { y += heapOffset; }
+				
+				heapOffset += this.heightOfObj() + this.offset; // set heapoffset for the next heap element
 				//console.log(heapOffset);
-
 				// draw bounding box for heap object
-				if ( xAnchor > 1){
+				if ( xAnchor > 1 && objectStyle == "java"){
 					x += 100;
 				}
-				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
-
+				else{
+					x = xBox;
+					y = yBox;
+				}
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfObj() +"\" style=\"stroke: black; fill:none;\"/>";
 				// get final coordinates of object pointer
-        if(objectStyle == "java"){
-          pxt = x // lefthand side of the box, this is the end location of the tail pointer
-  				pyt = y + this.heightOfBox()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
-        }
-        else{
-  				pxt = x;// lefthand side of the box, this is the end location of the tail pointer
-  				pyt = y; // calculate y-axis center of the bounding box, end location of the tail pointer
-        }
-
+				if(objectStyle == "java"){
+					pxt = x // lefthand side of the box, this is the end location of the tail pointer
+					pyt = y + this.heightOfObj()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
+				}
+				else{
+					pxt = x;// lefthand side of the box, this is the end location of the tail pointer
+					pyt = y; // calculate y-axis center of the bounding box, end location of the tail pointer
+				}
+				
 				// Draw name of object
 				x += 10;
 				y += 20;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
-
 				// Draw line pointer from middle of stack box to left-center of heap box
-				retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyb + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
-
-        if(objectStyle == "c++"){
-  				pyb = yBox + 22.5;
-  				pyt = this.heightOfBox() +  10;
-          // Draw line pointer from middle of stack box to left-center of heap box
-  				retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
-        }
-
-
+				
+				if (objectStyle == "java"){
+					retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+				}
+				retString += this.getReferences(pxt,pyt);
+				this.xHeapLoc = pxt;
+				this.yHeapLoc = pyt;
 				// Draw line pointer to all reference boxes
 				for (var i = 0; i < references.length; i++) {
 					console.log(references.length)
 					// Draw line pointer from middle of stack box to left-center of heap box
 					if(references[i].name == this.name && typeof(references[i].xRef) != "undefined") {
 						console.log(references[i])
-						retString += "<line x1=\"" + references[i].xRef + "\" y1=\"" + references[i].yRef + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
+						retString += "<line x1=\"" + references[i].xRef + "\" y1=\"" + references[i].yRef + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
 						references.splice(i,0);
 					}
 				}
-
 				// Draw local variables
 				y += 10;
 				for (var i = 0; i < this.variables.length; i++){
-					y += this.variables[i].height;
+					y += this.variables[i].heightOfBox();
 					retString += this.variables[i].draw(x,y,2,0);
-					y += 10;
+					//y += 10;
 				}
-
-				this.xHeapLoc = pxt;
-				this.yHeapLoc = pyt;
-
+				
 				return retString;
 			}
 		}
-
-		/** Object class is used to create a pointer to an object that
-			* appears as its own isolated box.
-			*/
-		class referenceObject extends Members{
-			constructor(name,objName,vals,xRef,yRef){
-				super(name);
-				this.variables = vals;
-				this.objName = objName;
-				this.width = this.widthOfName();
-				this.height = 50;
-				this.xRef = xRef;
-				this.yRef = yRef;
-			}
-
-			getName() { return this.name; }
-
-			widthOfName(){
-				var width = 0;
-				width += 25;
-				width += this.name.length*this.charWidth;
-				return width;
-			}
-
-			widthTot(){
-				var width = 0;
-				width += 25;
-				width += this.name.length*this.charWidth;
-				width += 22.5
-				return width;
-			}
-
-			// Receives current xPos and yPos from drawFunction()
-			draw(x,y,xAnchor,yAnchor,xRef,yRef){
-				var retString = "";
-
-				var xKey = x + 10		// x-position for text
-				var yKey = y				// y-position for text
-				var xBox = x + 15	// x-position for box
-				var yBox = y - 17.5	// y-position for box
-				var x1 = 0					// x-position for base of pointer
-				var y1 = 0					// y-position for base of pointer
-				var x2 = 0					// x-position for tip of pointer
-				var y2 = 0					// y-position for tip of pointer
-
-				// Draw name and bounding box within *stack*
-				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
-				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
-				xBox += nameWidth
-				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
-
-				// get origin of object pointer
-				x1 = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
-				y1 = yBox + 11.25 // same as x-axis center, but on the y-axis
-
-				this.xRef = x1;
-				this.yRef = y1;
-
-				// Calculate x coordinate anchor for heap elements
-				for (var i = 0; i < functions.length; i++) {
-					if (functions[i].widthOfBox() > x) { x = functions[i].widthOfBox() + 40 }
-				}
-
-				//console.log(heapOffset);
-
-				// Draw name and bounding box on the *heap*
-				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
-
-				//console.log(heapOffset);
-
-				// Draw line pointer from middle of stack box to left-center of heap box
-				//retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + this.xRef + "\" y2=\"" + this.yRef + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
-
-				return retString;
-			}
-		}
-
 		/** Variable class stores a name and a value for individual variables */
 		class Var extends Members{
 			constructor(name,v){
@@ -433,9 +323,8 @@
 				this.width = this.widthTot();
 				this.height = 20;
 			}
-
+			getType() { return 'Var'; }
 			getName(){ return this.name; }
-
 			/** Width function calculates the width (in pixels) of the name and value strings
 			 	*These values are added together with the x-offset value to generate the width
 			  *of the container
@@ -455,6 +344,7 @@
 			widthName(){
 				return this.name.length*this.charWidth + 10;
 			}
+			heightOfBox() { return this.charHeight; }
 			draw(x,y,xAnchor,yAnchor){
 				//window.alert(x + " " + y);
 				x += 10
@@ -469,7 +359,31 @@
 				return retString;
 			}
 		}
-
+		/**
+		 * RefVar is a pointer from another function to an object from the perivously called function
+		 **/
+		class RefVar extends Var {
+			constructor(name,ref){
+				super(name,'A');
+				this.ref = ref;
+				this.xFin = 0;
+				this.yFin = 0;
+			}
+			getType() { return 'RefVar'; }
+			getReference() { return this.ref; }
+			getPoint() { return [this.xFin,this.yFin]; }
+			draw(x,y,xAnchor,yAnchor){
+				x += 10
+				var xBox = x + this.widthName() - this.offset;
+				var yBox = y - 17.5
+				this.xFin = xBox + 11.25;
+				this.yFin = yBox + 11.25;
+				var retString = "";
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthValue() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				return retString;
+			}
+		}
 		/**
 		 * Array class
 		 **/
@@ -478,6 +392,7 @@
 				super(name);
 				this.elements = elements;
 			}
+			getType() { return 'Array'; }
 			draw(x,y,xAnchor,yAnchor){
 				var retString = "";
 				var xKey = x + 10		// x-position for text
@@ -523,7 +438,6 @@
 			}
 		}
 		/** End Member classes containers **/
-
 		/**************************************************************************/
 		/** Builder classes build arrays, parse input, and generate the SVGOutput **/
 		// takes variable from (example) 'x=3' to an Var object
@@ -531,7 +445,6 @@
 			var sVar = variable.split("=");
 			return new Var(sVar[0],sVar[1]);
 		}
-
 		// builds an array for the new object in order to store in the Object class
 		function buildObjectArray(variables){
 			var vars = [];
@@ -552,7 +465,6 @@
 			//console.log(vars);
 			return storeVariables(vars);
 		}
-
 		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated
 		function newObject(fullObj){
 			//console.log(fullObj);
@@ -562,7 +474,6 @@
 			//console.log(temp);
 			return temp;
 		}
-
 		function newArray(fullArray){
 			parseOne = fullArray.replace('(',' ');
 			parseOne = parseOne.replace(')','');
@@ -570,49 +481,45 @@
 			names = parsedArr[0].split('=');
 			return new Array(names[0],parsedArr[1].split(','))
 		}
-
 		// grabs the object from an old function and uses it in the new function
 		function refObject(refObj) {
 			//console.log(refObj)
 			//console.log(refObj.xHeapLoc + "\t" + refObj.yHeapLoc)
 			return new referenceObject(refObj.name,refObj.objName,refObj.variables,refObj.xHeapLoc,refObj.yHeapLoc);
 		}
-
+		function newReference(obj,f){
+			//console.log(f);
+			var name = obj.slice(0,obj.indexOf('='));
+			var ref = obj.slice(obj.indexOf('@')+1,obj.length)
+			return new RefVar(name,ref);
+		}
 		// creates an array of variable objects, whether Var or Object, to be used to create the new function
-		function storeVariables(variables){
+		function storeVariables(variables,f){
+			//console.log(variables.length);
 			var vars = [];
 			for(var i = 0; i < variables.length; i++){
+				//if ( variables[i].count('=') == 0 ) { window.alert("You forgot the '=' sign for " + variables[i] +"!"); }//Quit whole program }
+				
 				if (/[A-Za-z0-9]*=array\([A-Za-z0-9,]*\)/.test(variables[i])){
 					vars.push(newArray(variables[i]));
 				}
-				else if (/@?[A-Za-z0-9]*\([A-Za-z0-9=,]*\)/.test(variables[i])){
-					if (variables[i].startsWith("@")) {
-						varName = variables[i].substring(1,variables[i].indexOf('='))
-						for (var j = functions.length-1; j >= 0; j--) {
-							//console.log(functions[j] + "\t" + varName)
-							for (var k = 0; k < functions[j].local.length; k++) {
-								//console.log(functions[j].local[k].name + "\t" + varName)
-								if (functions[j].local[k].name == varName && functions[j].local[k].isRootObject) {
-									//window.alert(variables[i])
-									//console.log(variables[i])
-									newRefObject = refObject(functions[j].local[k]);
-									vars.push(newRefObject);
-									references.push(newRefObject);
-								}
-							}
-						}
-					} else {
-					vars.push(newObject(variables[i]));
+				else if (/[A-Za-z0-9]*=@[A-Za-z0-9]/.test(variables[i])){
+					var temp = newReference(variables[i],f);
+				    if ( temp != 0){
+						vars.push(temp);
 					}
+				}
+				else if (/[A-Za-z0-9]*\([A-Za-z0-9=,]*\)/.test(variables[i])){
+					vars.push(newObject(variables[i]));
 				}
 				else if (/[A-Za-z0-9]*=[A-Za-z0-9]/.test(variables[i])){
 					vars.push(parseVariable(variables[i]));
 				}
 				//console.log(vars);
 			}
+			
 			return vars;
 		}
-
 		function call(){
 			var svgOutput = "" // clear svgOutput before each addition to the stack
 			var allFunctions = []; // stores multiple functions seperated by newlines
@@ -630,11 +537,10 @@
 				if ( mainArray[2] != '' ){
 					localText = mainArray[2].split(";"); // need error checking ... parse locals *** objects in here
 				}
-				var para = storeVariables(paraText);
-				var local = storeVariables(localText);
+				var para = storeVariables(paraText,i);
+				var local = storeVariables(localText,i);
 				functions.push(new Function(mainArray[0],para,local)); // used to store all user-defined functions
 			}
-
 			// generate svg below. "content" is the string used to store the entire svg text
 			totalHeight += functions.length * 100
 			svgOutput += "<svg x=\"0\" y=\"0\" width=\"800\" height=\"400\">"
@@ -646,7 +552,7 @@
 		}
 		// Generates svg text based off of the parsed code passed as an argument
     function drawFunction(){
-			var retString = ""; // Initialize empty string to be returned (this will end up being svgOutput)
+				var retString = ""; // Initialize empty string to be returned (this will end up being svgOutput)
 			// loop over all members in "functions" and generate one long svg string for them
 			xPos = xAnchor // reinitialize the xPosition to the anchor
 			yPos = yAnchor // reinitialize the yPosition to the anchor
@@ -670,7 +576,6 @@
 					retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos);
 					yTemp += functions[i].local[j].charHeight;
 				}
-
 				// Changes spacing between function calls on the stack. This will eventually
 				// need to be dynamic, changing based on the number of objects on the heap.
 				//yPos += functions[i].heightOfBox() + padding + heapOffset;
@@ -680,7 +585,6 @@
 			}
       return retString;
     }
-
 		/**************************************************************************/
 		/** Functions that perform various tasks **/
 		// Function called to remove the last 'function' placed on the call stack
@@ -698,6 +602,20 @@
 				window.alert("No function calls on stack!");
 			}
 		}
+		
+		function printPrevText(){
+			var prevText = document.getElementById("functioncall").value;
+			console.log(prevText);
+			//document.getElementById("prevFuncCall").innerHTML = prevText;
+			document.getElementById("prevCallText").innerHTML = prevText;
+			call();
+		}
+
+		function repopulateFunctionCall(){
+			var prevText = document.getElementById("prevCallText").value;
+      document.getElementById("functioncall").value = prevText;
+		}
+
 		/** Saves svg output in plaintext to a file specified by the user
 			* Does not save if no output exists or if the filename is not specified
 			*/
@@ -737,26 +655,21 @@
 			document.getElementById("out").innerHTML = svgOutput;
 			window.location.reload();
 		}
-
     //DropDown functions
     function dropTop() {
         document.getElementById("myDropdown").classList.toggle("show");
     }
-
     function dropChooseJ(){
       document.getElementById("drop").innerHTML="Java Object Style";
       objectStyle = "java";
     }
-
     function dropChooseC(){
       document.getElementById("drop").innerHTML="C++ Object Style";
       objectStyle = "c++";
     }
-
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function(event) {
       if (!event.target.matches('.dropbtn')) {
-
         var dropdowns = document.getElementsByClassName("dropdown-content");
         var i;
         for (i = 0; i < dropdowns.length; i++) {
@@ -767,8 +680,6 @@
         }
       }
     }
-
-
 		/** End functions that perform various tasks **/
     </script>
 		<!-- End Javascript -->
@@ -819,9 +730,13 @@
         </div>
       </div>
 
+	  <br><br>
+      <div id="prevCallText">
+      </div>
+
       <br><br>
       Function Call: <textarea id="functioncall" rows="5" cols="35"></textarea>
-      <button onclick="call()"> Function Call </button>
+      <button onclick="printPrevText()"> Function Call </button>
 
       <br><br>
       <button onclick="returnFun()"> Return </button>
