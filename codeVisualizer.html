@@ -204,7 +204,7 @@
 				// loop over all variables and get the longest variable name
 				var varWidth = 0;
 				for (var i = 0; i < this.variables.length; i++) {
-					if (this.variables[i].getType() != 'Object' && this.variables[i].widthTot() > varWidth) {
+					if (objectStyle != 'java' && this.variables[i].widthTot() > varWidth) {
 						varWidth = this.variables[i].widthTot();
 					}
 				}
@@ -254,44 +254,32 @@
 				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
 				xBox += nameWidth
 				if ( objectStyle == "java" ){
-					retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+					retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
 				}
 				else {
-					retString += "<rect x=\"" + this.widthOfBox() + "\" y=\"" + this.heightOfBow() + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+					retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() + "\" height=\"" + this.heightOfBox() + "\" style=\"stroke: black; fill:none;\"/>";
 				}
 				// get origin of object pointer
 				if(objectStyle == "java"){
-					pxb = xBox + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
-					pyb = yBox + 11.25 // same as x-axis center, but on the y-axis
+					pxb = x + 11.25 // x-axis center of value box on the stack, this is the origin of the line pointer
+					pyb = y + 11.25 // same as x-axis center, but on the y-axis
 				}
 				else{
-					pxb = xBox + 22.5;// x-axis center of value box on the stack, this is the origin of the line pointer
-					pyb = yBox; // same as x-axis center, but on the y-axis
+					pxb = x + 22.5;// x-axis center of value box on the stack, this is the origin of the line pointer
+					pyb = y; // same as x-axis center, but on the y-axis
 				}
 				// Calculate x coordinate anchor for heap elements
-				for (var i = 0; i < functions.length; i++) {
-					if (functions[i].widthOfBox() > x) { x = functions[i].widthOfBox() + 40 }
-				}
-				//console.log(x);
-				// Draw name and bounding box on the *heap*
-				y = yAnchor + this.offset;// + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
-				if ( x < 200 ) { y += heapOffset; }
-				
-				heapOffset += this.heightOfObj() + this.offset; // set heapoffset for the next heap element
+				//heapOffset += this.heightOfObj() + this.offset; // set heapoffset for the next heap element
 				//console.log(heapOffset);
 				// draw bounding box for heap object
-				if ( xAnchor > 1 && objectStyle == "java"){
-					x += 100;
-				}
-				else{
-					x = xBox;
-					y = yBox;
+				if ( objectStyle == "java"){
+					y += 100;
 				}
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfObj() +"\" style=\"stroke: black; fill:none;\"/>";
 				// get final coordinates of object pointer
 				if(objectStyle == "java"){
-					pxt = x // lefthand side of the box, this is the end location of the tail pointer
-					pyt = y + this.heightOfObj()/2 // calculate y-axis center of the bounding box, end location of the tail pointer
+					pxt = x + this.widthOfBox()/2// lefthand side of the box, this is the end location of the tail pointer
+					pyt = y  // calculate y-axis center of the bounding box, end location of the tail pointer
 				}
 				else{
 					pxt = x;// lefthand side of the box, this is the end location of the tail pointer
@@ -303,22 +291,8 @@
 				y += 20;
 				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
 				// Draw line pointer from middle of stack box to left-center of heap box
-				
 				if (objectStyle == "java"){
 					retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
-				}
-				retString += this.getReferences(pxt,pyt);
-				this.xHeapLoc = pxt;
-				this.yHeapLoc = pyt;
-				// Draw line pointer to all reference boxes
-				for (var i = 0; i < references.length; i++) {
-					console.log(references.length)
-					// Draw line pointer from middle of stack box to left-center of heap box
-					if(references[i].name == this.name && typeof(references[i].xRef) != "undefined") {
-						console.log(references[i])
-						retString += "<line x1=\"" + references[i].xRef + "\" y1=\"" + references[i].yRef + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
-						references.splice(i,0);
-					}
 				}
 				// Draw local variables
 				y += 30;
@@ -327,7 +301,6 @@
 					y += this.variables[i].heightOfBox();
 					//y += 10;
 				}
-				
 				return retString;
 			}
 			draw(x,y,xAnchor,yAnchor){
@@ -436,6 +409,14 @@
 				return this.name.length*this.charWidth + 10;
 			}
 			heightOfBox() { return this.charHeight; }
+			arrayDraw(x,y,xAnchor,yAnchor){
+				var retString = "";
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.charHeight +"\" style=\"stroke: black; fill:none;\"/>";
+				y += 25;
+				var xbuff = x + 6;
+				retString += "<text x=\"" + xbuff + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
+				return retString;
+			}
 			draw(x,y,xAnchor,yAnchor){
 				//window.alert(x + " " + y);
 				x += 10
@@ -516,6 +497,7 @@
 		class Array extends Members{
 			constructor(name,elements){
 				super(name);
+				console.log(elements);
 				this.elements = elements;
 			}
 			getType() { return 'Array'; }
@@ -553,22 +535,14 @@
 				retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
 				// Draw local variables
 				for (var i = 0; i < this.elements.length; i++){
+					console.log(this.elements[i]);
 					var temp = 0;
-					if ( this.elements[i].getType() == "Object"){
-						temp = this.elements[i].widthOfBox();
-						retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + temp +"\" height=\"" + this.elements[i].heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
-						this.elements[i].drawArray(x,y)
-					}
-					else{
-						temp = this.elements[i].length*this.charWidth+10;
-						retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + temp +"\" height=\"" + this.charHeight +"\" style=\"stroke: black; fill:none;\"/>";
-						y += 25;
-						var xbuff = x + 6;
-						retString += "<text x=\"" + xbuff + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.elements[i] + "</text>";
-						y -= 25;
-						x += temp;
-					}
+					temp = this.elements[i].widthOfBox();
+					//retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + temp +"\" height=\"" + this.elements[i].heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
+					retString += this.elements[i].arrayDraw(x,y,0,0);
+					x += temp;
 				}
+				console.log(retString);
 				return retString;
 			}
 		}
@@ -576,42 +550,61 @@
 		/**************************************************************************/
 		/** Builder classes build arrays, parse input, and generate the SVGOutput **/
 		// takes variable from (example) 'x=3' to an Var object
-		function parseVariable(variable){
-			var sVar = variable.split("=");
-			return new Var(sVar[0],sVar[1]);
-		}
+		
 		// builds an array for the new object in order to store in the Object class
 		function buildObject(variables){
 			var vars = [];
 			var start = 0;
 			for(var i = 0; i < variables.length; i++){
 				if (/[.]/.test(variables[i])){
-					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw "Don't Work Like Dat"; }	
+					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
 				}
 				else if ( /[(]/.test(variables[i])){
 					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
 					start = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
 					i = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
-					if (/[,]/.test(variables[start])){ start++; i++; }
+					if (/[,;]/.test(variables[start])){ start++; i++; }
 				}
-				else if ( /[,]/.test(variables[i])){
+				else if ( /[;,]/.test(variables[i])){
 					vars.push(variables.slice(start,i));
 					start = i+1;
 				}
 			}
 			vars.push(variables.slice(start,variables.length));
-			console.log(vars);
+			//console.log(vars);
 			return storeVariables(vars); //////////////////////////////////////////////////////////try 
 			//throw err; ////////////////////////////////////////////////////////////////catch
 		}
+		function buildArrayObjects(variables){
+			var vars = [];
+			var start = 0;
+			for(var i = 0; i < variables.length; i++){
+				if (/[.]/.test(variables[i])){
+					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
+				}
+				else if ( /[(]/.test(variables[i])){
+					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
+					start = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
+					i = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
+					if (/[,;]/.test(variables[start])){ start++; i++; }
+				}
+				else if ( /[;,]/.test(variables[i])){
+					vars.push(variables.slice(start,i));
+					start = i+1;
+				}
+			}
+			vars.push(variables.slice(start,variables.length));
+			//console.log(vars);
+			return storeArray(vars);
+		}
 		function storeVariables(variables){
-			console.log(variables);
+			//console.log(variables);
 			var vars = [];
 			for(var i = 0; i < variables.length; i++){
 				if ( variables[i] != ""){
-					console.log(variables[i]);
+					//console.log(variables[i]);
 					if ( variables[i].indexOf('=') == -1 ) { throw "You forgot the '=' sign for " + variables[i] +"!"; }
-					if (/[A-Za-z0-9]*=array\([A-Za-z0-9,]*\)/.test(variables[i])){ vars.push(newArray(variables[i])); }
+					if (/[A-Za-z0-9]*=array\([A-Za-z0-9,()=]*\)/.test(variables[i])){ vars.push(newArray(variables[i])); }
 					else if (/[A-Za-z0-9]*=@[A-Za-z0-9]/.test(variables[i])  ){
 						var temp = newReference(variables[i]);
 						if ( temp != 0){ vars.push(temp); }
@@ -630,27 +623,31 @@
 			//console.log(vars);
 			return vars;
 		}
-		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated
-		function newObject(fullObj,type){
-			//console.log(fullObj);
-			//console.log(fullObj.slice(fullObj.indexOf('(')+1,fullObj.lastIndexOf(')')));
-			varsArray = buildObject(fullObj.slice(fullObj.indexOf('(')+1,fullObj.lastIndexOf(')')));
-			var temp = new Object(fullObj.slice(0,fullObj.indexOf('=')),fullObj.slice(fullObj.indexOf('=')+1,fullObj.indexOf('(')),varsArray,type);
-			//console.log(temp);
-			return temp;
-		}
 		function storeArray(variables){
+			console.log(variables);
 			var vars = [];
 			for(var i = 0; i < variables.length; i++){
 				if ( /[a-zA-Z]*\([A-Za-z0-9,=().]*\)/.test(variables[i]) ) { vars.push(newObject('a='+variables[i])); }
-				else { vars.push(variables[i]); }
+				else if (/[a-zA-Z0-9]+/.test(variables[i]) ) { vars.push(parseVariable('a=' + variables[i])); }
 			}
+			console.log(vars);
 			return vars;
 		}
 		function newArray(fullArray){
-			objects = storeArray(buildObject(fullArray.slice(fullArray.indexOf('('),fullArray.length-1)));
+			//window.alert('here');
+			objects = buildArrayObjects(fullArray.slice(fullArray.indexOf('(')+1,fullArray.length-1));
 			console.log(objects);
-			return new Array(fullArray.slice(0,fullArray.indexOf('=')),parsedArr[1].split(','))
+			return new Array(fullArray.slice(0,fullArray.indexOf('=')),objects);
+		}
+		function parseVariable(variable){
+			var sVar = variable.split("=");
+			return new Var(sVar[0],sVar[1]);
+		}
+		// takes a new object from 'Point(x=2,y=1)' to and Object that has the values name and variables populated
+		function newObject(fullObj,type){
+			varsArray = buildObject(fullObj.slice(fullObj.indexOf('(')+1,fullObj.lastIndexOf(')')));
+			var temp = new Object(fullObj.slice(0,fullObj.indexOf('=')),fullObj.slice(fullObj.indexOf('=')+1,fullObj.indexOf('(')),varsArray,type);
+			return temp;
 		}
 		// grabs the object from an old function and uses it in the new function
 		function refObject(refObj) {
@@ -668,7 +665,6 @@
 			return new refPointer(name,ref);
 		}
 		// creates an array of variable objects, whether Var or Object, to be used to create the new function
-		
 		function call(){
 			//try {
 				var svgOutput = "" // clear svgOutput before each addition to the stack
@@ -705,40 +701,40 @@
 			//}
 		}
 		// Generates svg text based off of the parsed code passed as an argument
-    function drawFunction(){
-			var retString = ""; // Initialize empty string to be returned (this will end up being svgOutput)
-			// loop over all members in "functions" and generate one long svg string for them
-			xPos = xAnchor // reinitialize the xPosition to the anchor
-			yPos = yAnchor // reinitialize the yPosition to the anchor
-			// Loop over all functions in the array and generate svg output for each of them
-			for(var i = functions.length - 1; i >= 0; i--){
-				retString += functions[i].draw(xPos,yPos);
-				// Use temporary x,y coordinates so that the xPos and yPos are not altered
-				var xTemp = xPos
-				var yTemp = yPos
-				xTemp += functions[i].nameLength();
-				yTemp += 20;
-				//Loop over parameters
-				for(var j=0; j < functions[i].para.length; j++){
-					retString += functions[i].para[j].draw(xTemp,yTemp,xPos,yPos);
-					xTemp += functions[i].para[j].widthTot();
+		function drawFunction(){
+				var retString = ""; // Initialize empty string to be returned (this will end up being svgOutput)
+				// loop over all members in "functions" and generate one long svg string for them
+				xPos = xAnchor // reinitialize the xPosition to the anchor
+				yPos = yAnchor // reinitialize the yPosition to the anchor
+				// Loop over all functions in the array and generate svg output for each of them
+				for(var i = functions.length - 1; i >= 0; i--){
+					retString += functions[i].draw(xPos,yPos);
+					// Use temporary x,y coordinates so that the xPos and yPos are not altered
+					var xTemp = xPos
+					var yTemp = yPos
+					xTemp += functions[i].nameLength();
+					yTemp += 20;
+					//Loop over parameters
+					for(var j=0; j < functions[i].para.length; j++){
+						retString += functions[i].para[j].draw(xTemp,yTemp,xPos,yPos);
+						xTemp += functions[i].para[j].widthTot();
+					}
+					// Loop over locals
+					xTemp = xPos
+					yTemp = yPos + functions[i].charHeight + 25;
+					for(var j=0; j < functions[i].local.length; j++){
+						retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos);
+						yTemp += functions[i].local[j].heightOfBox();
+					}
+					// Changes spacing between function calls on the stack. This will eventually
+					// need to be dynamic, changing based on the number of objects on the heap.
+					//yPos += functions[i].heightOfBox() + padding + heapOffset;
+					if (heapOffset > functions[i].heightOfBox()) { yPos += heapOffset + padding; }
+					else { yPos += functions[i].heightOfBox() + padding; }//console.log(yPos); }
+					heapOffset = 0;
 				}
-				// Loop over locals
-				xTemp = xPos
-				yTemp = yPos + functions[i].charHeight + 25;
-				for(var j=0; j < functions[i].local.length; j++){
-					retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos);
-					yTemp += functions[i].local[j].heightOfBox();
-				}
-				// Changes spacing between function calls on the stack. This will eventually
-				// need to be dynamic, changing based on the number of objects on the heap.
-				//yPos += functions[i].heightOfBox() + padding + heapOffset;
-				if (heapOffset > functions[i].heightOfBox()) { yPos += heapOffset + padding; }
-				else { yPos += functions[i].heightOfBox() + padding; }//console.log(yPos); }
-				heapOffset = 0;
-			}
-      return retString;
-    }
+		  return retString;
+		}
 		/**************************************************************************/
 		/** Functions that perform various tasks **/
 		// Function called to remove the last 'function' placed on the call stack
@@ -752,14 +748,16 @@
 				svgOutput += "</svg>";
 				//console.log(svgOutput);
 				document.getElementById("out").innerHTML = svgOutput;
-			} else {
+			}
+			else {
 				window.alert("No function calls on stack!");
 			}
 		}
 		
 		function printPrevText(){
+			longestFunctionWidth = 0;
 			var prevText = document.getElementById("functioncall").value;
-			console.log(prevText);
+			//console.log(prevText);
 			//document.getElementById("prevFuncCall").innerHTML = prevText;
 			document.getElementById("prevCallText").innerHTML = prevText;
 			call();
@@ -767,73 +765,73 @@
 
 		function repopulateFunctionCall(){
 			var prevText = document.getElementById("prevCallText").value;
-      document.getElementById("functioncall").value = prevText;
+			document.getElementById("functioncall").value = prevText;
 		}
 
 		/** Saves svg output in plaintext to a file specified by the user
 			* Does not save if no output exists or if the filename is not specified
 			*/
-    function saveTextAsFile(){
-      var textToSave = svgOutput
-			var fileNameToSaveAs = document.getElementById("saveFileName").value;
-			if ( textToSave != "" && fileNameToSaveAs != ""){
-				// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
-				var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
-				var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-				var downloadLink = document.createElement("a");
-				downloadLink.download = fileNameToSaveAs;
-				downloadLink.innerHTML = "Download File";
-				downloadLink.href = textToSaveAsURL;
-				downloadLink.onclick = destroyClickedElement;
-				downloadLink.style.display = "none";
-				document.body.appendChild(downloadLink);
-				downloadLink.click();
-			}
-			else {
-				if ( textToSave == "" ){
-					window.alert("No output to save");
+		function saveTextAsFile(){
+		  var textToSave = svgOutput
+				var fileNameToSaveAs = document.getElementById("saveFileName").value;
+				if ( textToSave != "" && fileNameToSaveAs != ""){
+					// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+					var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
+					var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+					var downloadLink = document.createElement("a");
+					downloadLink.download = fileNameToSaveAs;
+					downloadLink.innerHTML = "Download File";
+					downloadLink.href = textToSaveAsURL;
+					downloadLink.onclick = destroyClickedElement;
+					downloadLink.style.display = "none";
+					document.body.appendChild(downloadLink);
+					downloadLink.click();
 				}
-				if (fileNameToSaveAs == "") {
-					window.alert("Please specify a filename")
+				else {
+					if ( textToSave == "" ){
+						window.alert("No output to save");
+					}
+					if (fileNameToSaveAs == "") {
+						window.alert("Please specify a filename")
+					}
 				}
-			}
-    }
-		// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
-    function destroyClickedElement(event){
-        document.body.removeChild(event.target);
-    }
-		/** ClearStack function resets all arrays and output and reloads the page **/
+		}
+			// https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+		function destroyClickedElement(event){
+			document.body.removeChild(event.target);
+		}
+			/** ClearStack function resets all arrays and output and reloads the page **/
 		function clearStack(){
 			functions = [];
 			svgOutput = "";
 			document.getElementById("out").innerHTML = svgOutput;
 			window.location.reload();
 		}
-    //DropDown functions
-    function dropTop() {
-        document.getElementById("myDropdown").classList.toggle("show");
-    }
-    function dropChooseJ(){
-      document.getElementById("drop").innerHTML="Java Object Style";
-      objectStyle = "java";
-    }
-    function dropChooseC(){
-      document.getElementById("drop").innerHTML="C++ Object Style";
-      objectStyle = "c++";
-    }
-    // Close the dropdown menu if the user clicks outside of it
-    window.onclick = function(event) {
-      if (!event.target.matches('.dropbtn')) {
-        var dropdowns = document.getElementsByClassName("dropdown-content");
-        var i;
-        for (i = 0; i < dropdowns.length; i++) {
-          var openDropdown = dropdowns[i];
-          if (openDropdown.classList.contains('show')) {
-            openDropdown.classList.remove('show');
-          }
-        }
-      }
-    }
+		//DropDown functions
+		function dropTop() {
+			document.getElementById("myDropdown").classList.toggle("show");
+		}
+		function dropChooseJ(){
+		  document.getElementById("drop").innerHTML="Java Object Style";
+		  objectStyle = "java";
+		}
+		function dropChooseC(){
+		  document.getElementById("drop").innerHTML="C++ Object Style";
+		  objectStyle = "c++";
+		}
+		// Close the dropdown menu if the user clicks outside of it
+		window.onclick = function(event) {
+		  if (!event.target.matches('.dropbtn')) {
+			var dropdowns = document.getElementsByClassName("dropdown-content");
+			var i;
+			for (i = 0; i < dropdowns.length; i++) {
+			  var openDropdown = dropdowns[i];
+			  if (openDropdown.classList.contains('show')) {
+				openDropdown.classList.remove('show');
+			  }
+			}
+		  }
+		}
 	//name of the var looking and the coordinates of the var 
 		/** End functions that perform various tasks **/
     </script>
@@ -864,20 +862,15 @@
       <p>Ex: main.x=3;y=2.a=1;b=2</p>
       <p>Example with an Object:</p>
       <p>main.x=3;y=2.a=1;b=point(x=1,y=1)</p>
-
-
-      FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
-      <button onclick="saveTextAsFile()"> Save to File </button>
     </div>
 
-    <br class="clearright"><br><br>
+    <br class="clearright"><br>
 
     <!--Input-->
     <div class="input">
       <div class="innerHeader">Input</div>
-      <br>
-
-
+	   <div id="prevCallText">
+      </div>
       <div class="dropdown">
         <button id="drop" onclick="dropTop()" class="dropbtn">Choose an Object Style</button>
         <div id="myDropdown" class="dropdown-content">
@@ -885,23 +878,24 @@
           <span onclick="dropChooseJ()" value="java">Java</span>
         </div>
       </div>
-
-      <div id="prevCallText">
-      </div>
-
-      <br>
+     
+	  <br class="clearboth">
       <textarea id="functioncall" rows="5" cols="35"></textarea>
       <button onclick="printPrevText()"> Function Call </button>
 
-      <br><br>
+      <br class="clearboth"><br>
       <button onclick="returnFun()"> Return </button>
 
-      <br><br>
+      <br><br class="clearboth">
       <button onclick="clearStack()"> Clear Stack </button>
+	  <div class="save">
+		FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
+		<button onclick="saveTextAsFile()"> Save to File </button>
+	  </div>
     </div>
 
     <br class="clearboth">
-
+	<br><br>
     <!--FOOTER-->
     <div class="footer">
       <b>Hackstreet Boys</b> - Capstone<br/>

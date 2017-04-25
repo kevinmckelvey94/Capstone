@@ -1,9 +1,9 @@
-
 .outer{
   /*body attributes
    *background image
    *margin parameters
   */
+	font-family: "Console";
     background-image: url("images/blueAbstract1.jpg");
     margin-left: 5%;
     margin-right: 5%;
@@ -23,6 +23,9 @@
    *used in <br> tag
   */
     clear: right;
+}
+.clearleft{
+	clear: left;
 }
 
 .header
@@ -65,7 +68,7 @@
      *It has 5 pixels of padding on each side
     */
     background-color: #ffffff;
-    height: auto;
+    height: 48%;
     float: right;
     margin-right: auto;
     width: 45%;
@@ -84,7 +87,7 @@
      *It has 5 pixels of padding on each side
     */
     background-color: #ffffff;
-    height: auto;
+    height: 48%;
     float: right;
     margin-left: auto;
     width: 45%;
@@ -98,17 +101,15 @@
   margin: 0px 0px 15px 15px;
 }
 .svg{
-  font-family: "Lucida Console";
   overflow:auto;
 }
-.output
-{
+.output{
     /*This is an information panel
      *Its left margin is 310 pixels
      *It has a left and bottom border that is 1 black pixel
      *It has 5 pixels of padding on each side
     */
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   height: 100%;
   float: left;
   width: 50%;
@@ -119,13 +120,13 @@
 
 #textbox
 {
-	  font-family: "Lucida Console";
     height:200px;
     font-size:14pt;
 }
 
 /* Dropdown Button */
 .dropbtn {
+	float: right;
     background-color: #7BACE7;
     color: white;
     padding: 10px;
@@ -141,6 +142,7 @@
 
 /* The container <div> - needed to position the dropdown content */
 .dropdown {
+	float: right;
     position: relative;
     display: inline-block;
 }
@@ -168,3 +170,4 @@
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {display:block;}
+.save{float: right;}
