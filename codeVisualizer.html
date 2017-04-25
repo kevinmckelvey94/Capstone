@@ -107,8 +107,8 @@
 			// Calculate height of box by computing the sum of all characters in the locals array
 			heightOfBox(){
 				var height = this.offset; // initialize height to 5 pixels
-				for( var i = 0; i < this.local.length; i++){ 
-					height += this.local[i].heightOfBox(); 
+				for( var i = 0; i < this.local.length; i++){
+					height += this.local[i].heightOfBox();
 				}
 				height += this.charHeight;
 				return height;
@@ -118,7 +118,7 @@
 				// Get width of name and all parameters
 				var paramWidth = this.offset*4; 							// initialize width to 10 pixels
 				paramWidth += this.nameLength(); // add length of function name to width total
-				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); } 
+				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); }
 				// loop over all variables and get the longest variable name
 				var varWidth = 0;
 				for (var i = 0; i < this.local.length; i++) {
@@ -162,7 +162,7 @@
 				this.height = 50;
 				this.xHeapLoc; // x-coordinate of heap object
 				this.yHeapLoc; // y-coordinate of heap object
-					
+
 			}
 			getType() { return 'Object'; }
 			getName() { return this.name; }
@@ -189,7 +189,7 @@
 			heightOfBox(){
 				if ( objectStyle == 'java') { return this.charHeight; }
 				var height = this.offset*3 + this.charHeight;
-				for( var i = 0; i < this.variables.length; i++){ 
+				for( var i = 0; i < this.variables.length; i++){
 					//console.log(this.variables[i]);
 					height += this.variables[i].heightOfBox();
 				}
@@ -210,7 +210,7 @@
 				}
 				// compare nameWidth and varWidth, longest one wins
 				if (nameWidth >= varWidth) { width = nameWidth + this.offset*3; }
-				else { width = varWidth + this.offset*9; } 
+				else { width = varWidth + this.offset*9; }
 				//console.log(width);
 				return width;
 			}
@@ -238,8 +238,8 @@
 				}
 				return retString;
 			}
-			
-				
+
+
 			arrayDraw(x,y,xAnchor,yAnchor){
 				var retString = "";
 				var xKey = x + 10		    // x-position for text
@@ -285,7 +285,7 @@
 					pxt = x;// lefthand side of the box, this is the end location of the tail pointer
 					pyt = y; // calculate y-axis center of the bounding box, end location of the tail pointer
 				}
-				
+
 				// Draw name of object
 				x += 10;
 				y += 20;
@@ -550,14 +550,14 @@
 		/**************************************************************************/
 		/** Builder classes build arrays, parse input, and generate the SVGOutput **/
 		// takes variable from (example) 'x=3' to an Var object
-		
+
 		// builds an array for the new object in order to store in the Object class
 		function buildObject(variables){
 			var vars = [];
 			var start = 0;
 			for(var i = 0; i < variables.length; i++){
 				if (/[.]/.test(variables[i])){
-					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
+					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }
 				}
 				else if ( /[(]/.test(variables[i])){
 					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
@@ -572,7 +572,7 @@
 			}
 			vars.push(variables.slice(start,variables.length));
 			//console.log(vars);
-			return storeVariables(vars); //////////////////////////////////////////////////////////try 
+			return storeVariables(vars); //////////////////////////////////////////////////////////try
 			//throw err; ////////////////////////////////////////////////////////////////catch
 		}
 		function buildArrayObjects(variables){
@@ -580,7 +580,7 @@
 			var start = 0;
 			for(var i = 0; i < variables.length; i++){
 				if (/[.]/.test(variables[i])){
-					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
+					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }
 				}
 				else if ( /[(]/.test(variables[i])){
 					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
@@ -753,7 +753,7 @@
 				window.alert("No function calls on stack!");
 			}
 		}
-		
+
 		function printPrevText(){
 			longestFunctionWidth = 0;
 			var prevText = document.getElementById("functioncall").value;
@@ -832,7 +832,7 @@
 			}
 		  }
 		}
-	//name of the var looking and the coordinates of the var 
+	//name of the var looking and the coordinates of the var
 		/** End functions that perform various tasks **/
     </script>
 		<!-- End Javascript -->
@@ -869,8 +869,24 @@
     <!--Input-->
     <div class="input">
       <div class="innerHeader">Input</div>
-	   <div id="prevCallText">
+      <br>
+	    <div id="prevCallText">
+        Last Call: N/A
       </div>
+
+      <br class="clearboth">
+      <div class="rightside">
+        <textarea id="functioncall" rows="5" cols="30"></textarea>
+      </div>
+     <div class="inline">
+      <button onclick="printPrevText()"> Function Call </button>
+      <br><br>
+      <button onclick="returnFun()"> Return </button>
+      <br><br>
+      <button onclick="clearStack()"> Clear Stack </button>
+    </div>
+
+    <div class="save">
       <div class="dropdown">
         <button id="drop" onclick="dropTop()" class="dropbtn">Choose an Object Style</button>
         <div id="myDropdown" class="dropdown-content">
@@ -878,24 +894,17 @@
           <span onclick="dropChooseJ()" value="java">Java</span>
         </div>
       </div>
-     
-	  <br class="clearboth">
-      <textarea id="functioncall" rows="5" cols="35"></textarea>
-      <button onclick="printPrevText()"> Function Call </button>
+      <br>
+      <br>
+      <br>
+      FileName:<br> <textarea id="saveFileName" rows="1" cols="15"></textarea><br>
+      <button onclick="saveTextAsFile()"> Save to File </button>
+    </div>
 
-      <br class="clearboth"><br>
-      <button onclick="returnFun()"> Return </button>
-
-      <br><br class="clearboth">
-      <button onclick="clearStack()"> Clear Stack </button>
-	  <div class="save">
-		FileName: <textarea id="saveFileName" rows="1" cols="15"></textarea>
-		<button onclick="saveTextAsFile()"> Save to File </button>
-	  </div>
     </div>
 
     <br class="clearboth">
-	<br><br>
+
     <!--FOOTER-->
     <div class="footer">
       <b>Hackstreet Boys</b> - Capstone<br/>
