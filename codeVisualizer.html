@@ -107,8 +107,9 @@
 			// Calculate height of box by computing the sum of all characters in the locals array
 			heightOfBox(){
 				var height = this.offset; // initialize height to 5 pixels
-				for( var i = 0; i < this.local.length; i++){
-					height += this.local[i].heightOfBox();
+				for( var i = 0; i < this.local.length; i++){ 
+					if ( this.local[i].getType() == 'Object' && this.local[i].getAlloc() ) { height += 30; }
+					else { height += this.local[i].heightOfBox(); } 
 				}
 				height += this.charHeight;
 				return height;
@@ -118,7 +119,7 @@
 				// Get width of name and all parameters
 				var paramWidth = this.offset*4; 							// initialize width to 10 pixels
 				paramWidth += this.nameLength(); // add length of function name to width total
-				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); }
+				for(var i = 0; i < this.para.length; i++){ paramWidth += this.para[i].widthTot(); } 
 				// loop over all variables and get the longest variable name
 				var varWidth = 0;
 				for (var i = 0; i < this.local.length; i++) {
@@ -128,7 +129,7 @@
 				}
 				// compare nameWidth and varWidth, longest one wins
 				if (paramWidth >= varWidth) { width = paramWidth + this.offset*3; }
-				else { width = varWidth + this.offset*4; }
+				else { width = varWidth + this.offset*6; }
 				// use longest width in the function stack for uniformity
 				if (width >= longestFunctionWidth) { longestFunctionWidth = width; }
 				else { width = longestFunctionWidth; }
@@ -162,11 +163,12 @@
 				this.height = 50;
 				this.xHeapLoc; // x-coordinate of heap object
 				this.yHeapLoc; // y-coordinate of heap object
-
+					
 			}
 			getType() { return 'Object'; }
 			getName() { return this.name; }
 			getFinalLoc() { return [this.xHeapLoc,this.yHeapLoc]; }
+			getAlloc() { return this.alloc; }
 			widthTot(){
 				var width = 0;
 				width += 25;
@@ -189,7 +191,7 @@
 			heightOfBox(){
 				if ( objectStyle == 'java') { return this.charHeight; }
 				var height = this.offset*3 + this.charHeight;
-				for( var i = 0; i < this.variables.length; i++){
+				for( var i = 0; i < this.variables.length; i++){ 
 					//console.log(this.variables[i]);
 					height += this.variables[i].heightOfBox();
 				}
@@ -210,7 +212,7 @@
 				}
 				// compare nameWidth and varWidth, longest one wins
 				if (nameWidth >= varWidth) { width = nameWidth + this.offset*3; }
-				else { width = varWidth + this.offset*9; }
+				else { width = varWidth + this.offset*9; } 
 				//console.log(width);
 				return width;
 			}
@@ -238,21 +240,17 @@
 				}
 				return retString;
 			}
-
-
+			
+				
 			arrayDraw(x,y,xAnchor,yAnchor){
 				var retString = "";
 				var xKey = x + 10		    // x-position for text
 				var yKey = y				// y-position for text
-				var xBox = x + 15	        // x-position for box
-				var yBox = y - 17.5	        // y-position for box
 				var pxb = 0					// x-position for base of pointer
 				var pyb = 0					// y-position for base of pointer
 				var pxt = 0					// x-position for tip of pointer
 				var pyt = 0					// y-position for tip of pointer
 				// Draw name and bounding box within *stack*
-				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
-				xBox += nameWidth
 				if ( objectStyle == "java" ){
 					retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
 				}
@@ -273,7 +271,8 @@
 				//console.log(heapOffset);
 				// draw bounding box for heap object
 				if ( objectStyle == "java"){
-					y += 100;
+					x += xAnchor*yAnchor;
+					y += 40;
 				}
 				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.heightOfObj() +"\" style=\"stroke: black; fill:none;\"/>";
 				// get final coordinates of object pointer
@@ -285,11 +284,11 @@
 					pxt = x;// lefthand side of the box, this is the end location of the tail pointer
 					pyt = y; // calculate y-axis center of the bounding box, end location of the tail pointer
 				}
-
+				
 				// Draw name of object
 				x += 10;
 				y += 20;
-				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
 				// Draw line pointer from middle of stack box to left-center of heap box
 				if (objectStyle == "java"){
 					retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
@@ -314,7 +313,7 @@
 				var pxt = 0					// x-position for tip of pointer
 				var pyt = 0					// y-position for tip of pointer
 				// Draw name and bounding box within *stack*
-				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
 				xBox += nameWidth
 				if ( objectStyle == "java" || this.alloc ){ retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>"; }
@@ -352,7 +351,7 @@
 				// Draw name of object
 				x += 10;
 				y += 20;
-				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.objName + "</text>";
 				// Draw line pointer from middle of stack box to left-center of heap box
 				if (objectStyle == "java" || this.alloc){ retString += "<line x1=\"" + pxb + "\" y1=\"" + pyb + "\" x2=\"" + pxt + "\" y2=\"" + pyt + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"; }
 				retString += this.getReferences(pxt,pyt);
@@ -373,7 +372,8 @@
 				for (var i = 0; i < this.variables.length; i++){
 					console.log(this.variables[i]);
 					retString += this.variables[i].draw(x,y,x/2,y/2);
-					y += this.variables[i].heightOfBox();
+					if (this.alloc) { y += this.charHeight; }
+					else { y += this.variables[i].heightOfBox(); }
 					//y += 10;
 				}
 				return retString;
@@ -426,8 +426,8 @@
 				var yValue = y
 				var retString = "";
 				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
-				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
-				retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + xValue + "\" y=\"" + yValue + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.value + "</text>";
 				return retString;
 			}
 		}
@@ -452,7 +452,7 @@
 				this.yFin = yBox + 11.25;
 				var retString = "";
 				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
-				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				return retString;
 			}
 		}
@@ -484,7 +484,7 @@
 				//window.alert(loc);
 				var retString = "";
 				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"" + this.widthOfBox() +"\" height=\"" + this.height +"\" style=\"stroke: black; fill:none;\"/>";
-				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + x + "\" y=\"" + y + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				retString += "<line x1=\"" + xb + "\" y1=\"" + yb + "\" x2=\"" + loc[0] + "\" y2=\"" + loc[1] + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
 				return retString;
 			}
@@ -502,6 +502,58 @@
 			}
 			getType() { return 'Array'; }
 			heightOfBox() { return this.charHeight; }
+			widthOfBox() { 
+				var width = 0;
+				for( var i =0; i <this.elements.length; i++){
+					if ( objectStyle == 'java' ) {  width += 22.5; }
+					else { width += this.elements[i].widthOfBox(); }
+				}
+				return width;
+			}
+			arrayDraw(x,y,xAnchor,yAnchor){
+				//y += 100;
+				console.log(x,y);
+				var retString = "";
+				var xKey = x + 10;		// x-position for text
+				var yKey = y;				// y-position for text
+				var xBox = x;	// x-position for box
+				var yBox = y+10;	// y-position for box
+				var x1 = 0;					// x-position for base of pointer
+				var y1 = 0;					// y-position for base of pointer
+				var x2 = 0;					// x-position for tip of pointer
+				var y2 = 0;					// y-position for tip of pointer
+				// Draw name and bounding box within *stack*
+				retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+				// get origin of object pointer
+				//retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
+				xBox += nameWidth;
+				//retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+				// get origin of object pointer
+				x1 = xBox; // x-axis center of value box on the stack, this is the origin of the line pointer
+				y1 = yBox; // same as x-axis center, but on the y-axis
+				// Calculate x coordinate anchor for heap elements
+				// Draw name and bounding box on the *heap*
+				y += 100; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
+				// get final coordinates of object pointer
+				x2 = x + this.widthOfBox()/2; // lefthand side of the box, this is the end location of the tail pointer
+				y2 = y; // calculate y-axis center of the bounding box, end location of the tail pointer
+				// Draw line pointer from middle of stack box to left-center of heap box
+				retString += "<line x1=\"" + xBox + "\" y1=\"" + yBox + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
+				// Draw local variables
+				for (var i = 0; i < this.elements.length; i++){
+					//console.log(this.elements[i]);
+					var temp = 0;
+					temp = this.elements[i].widthOfBox();
+					//retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + temp +"\" height=\"" + this.elements[i].heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
+					if ( i > 0 ) { retString += this.elements[i].arrayDraw(x,y,this.elements[i-1].widthOfBox(),i+1); }
+					else { retString += this.elements[i].arrayDraw(x,y,0,0); }
+					if ( objectStyle == 'java' ) {  x += 22.5; }
+					else { x += temp; }
+				}
+				console.log(retString);
+				return retString;
+			}
 			draw(x,y,xAnchor,yAnchor){
 				var retString = "";
 				var xKey = x + 10;		// x-position for text
@@ -513,10 +565,10 @@
 				var x2 = 0;					// x-position for tip of pointer
 				var y2 = 0;					// y-position for tip of pointer
 				// Draw name and bounding box within *stack*
-				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: none;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
+				retString += "<text x=\"" + xKey + "\" y=\"" + yKey + "\" style=\"stroke: black; fill: black;stroke-width: 1;font-size: 20\" >" + this.name + "</text>";
 				var nameWidth = this.name.length*this.charWidth; // width equal to width of name
 				xBox += nameWidth;
-				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>";
+				retString += "<rect x=\"" + xBox + "\" y=\"" + yBox + "\" width=\"22.5\" height=\"22.5\" style=\"stroke: black; fill:none;\"/>"; 
 				// get origin of object pointer
 				x1 = xBox + 11.25; // x-axis center of value box on the stack, this is the origin of the line pointer
 				y1 = yBox + 11.25; // same as x-axis center, but on the y-axis
@@ -527,7 +579,7 @@
 				console.log(heapOffset);
 				// Draw name and bounding box on the *heap*
 				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
-				console.log(heapOffset);
+				//console.log(heapOffset);
 				// get final coordinates of object pointer
 				x2 = x; // lefthand side of the box, this is the end location of the tail pointer
 				y2 = y + 15; // calculate y-axis center of the bounding box, end location of the tail pointer
@@ -535,12 +587,14 @@
 				retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
 				// Draw local variables
 				for (var i = 0; i < this.elements.length; i++){
-					console.log(this.elements[i]);
+					console.log(x,y);
 					var temp = 0;
 					temp = this.elements[i].widthOfBox();
 					//retString += "<rect x=\"" + x + "\" y=\"" + y + "\" width=\"" + temp +"\" height=\"" + this.elements[i].heightOfBox() +"\" style=\"stroke: black; fill:none;\"/>";
-					retString += this.elements[i].arrayDraw(x,y,0,0);
-					x += temp;
+					if ( i > 0 ) { retString += this.elements[i].arrayDraw(x,y,this.elements[i-1].widthOfBox(),i+1); }
+					else { retString += this.elements[i].arrayDraw(x,y,0,0); }
+					if ( objectStyle == 'java' ) {  x += 22.5; }
+					else { x += temp; }
 				}
 				console.log(retString);
 				return retString;
@@ -550,14 +604,14 @@
 		/**************************************************************************/
 		/** Builder classes build arrays, parse input, and generate the SVGOutput **/
 		// takes variable from (example) 'x=3' to an Var object
-
+		
 		// builds an array for the new object in order to store in the Object class
 		function buildObject(variables){
 			var vars = [];
 			var start = 0;
 			for(var i = 0; i < variables.length; i++){
 				if (/[.]/.test(variables[i])){
-					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }
+					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
 				}
 				else if ( /[(]/.test(variables[i])){
 					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
@@ -572,15 +626,23 @@
 			}
 			vars.push(variables.slice(start,variables.length));
 			//console.log(vars);
-			return storeVariables(vars); //////////////////////////////////////////////////////////try
-			//throw err; ////////////////////////////////////////////////////////////////catch
+			try{
+				return storeVariables(vars); 
+			}
+			catch(err){
+				throw err;
+			}
 		}
 		function buildArrayObjects(variables){
 			var vars = [];
 			var start = 0;
 			for(var i = 0; i < variables.length; i++){
 				if (/[.]/.test(variables[i])){
-					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }
+					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
+				}
+				else if ( /[;,]/.test(variables[i])){
+					vars.push(variables.slice(start,i));
+					start = i+1;
 				}
 				else if ( /[(]/.test(variables[i])){
 					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
@@ -588,10 +650,7 @@
 					i = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
 					if (/[,;]/.test(variables[start])){ start++; i++; }
 				}
-				else if ( /[;,]/.test(variables[i])){
-					vars.push(variables.slice(start,i));
-					start = i+1;
-				}
+				
 			}
 			vars.push(variables.slice(start,variables.length));
 			//console.log(vars);
@@ -614,7 +673,10 @@
 						if ( temp != 0){ vars.push(temp); }
 					}
 					else if (/[A-Za-z0-9=]*\([A-Za-z0-9=,.]*\)/.test(variables[i])){
-						if (/[A-Za-z0-9]*=new[()A-Za-z0-9,=.]*/.test(variables[i])){ vars.push(newObject(variables[i],true)); }
+						if (/[A-Za-z0-9]*=new[()A-Za-z0-9,=.]*/.test(variables[i])){ 
+							temp = variables[i].replace('new','');
+							vars.push(newObject(temp,true)); 
+						}
 						else { vars.push(newObject(variables[i],false)); }
 					}
 					else if (/[A-Za-z0-9]*=[A-Za-z0-9]/.test(variables[i])){ vars.push(parseVariable(variables[i])); }
@@ -627,7 +689,9 @@
 			console.log(variables);
 			var vars = [];
 			for(var i = 0; i < variables.length; i++){
-				if ( /[a-zA-Z]*\([A-Za-z0-9,=().]*\)/.test(variables[i]) ) { vars.push(newObject('a='+variables[i])); }
+				console.log(i)
+				if ( /array\([A-Za-z0-9,=().]*\)/.test(variables[i]) ) { vars.push(newArray('a='+variables[i])); }
+				else if ( /[a-zA-Z]*\([A-Za-z0-9,=().]*\)/.test(variables[i]) ) { vars.push(newObject('a='+variables[i])); }
 				else if (/[a-zA-Z0-9]+/.test(variables[i]) ) { vars.push(parseVariable('a=' + variables[i])); }
 			}
 			console.log(vars);
@@ -666,7 +730,7 @@
 		}
 		// creates an array of variable objects, whether Var or Object, to be used to create the new function
 		function call(){
-			//try {
+			try {
 				var svgOutput = "" // clear svgOutput before each addition to the stack
 				var allFunctions = []; // stores multiple functions seperated by newlines
 				var rawText = document.getElementById("functioncall").value;
@@ -690,15 +754,15 @@
 				// generate svg below. "content" is the string used to store the entire svg text
 				totalHeight += functions.length * 100
 				console.log(functions);
-				svgOutput += "<svg x=\"0\" y=\"0\" width=\"800\" height=\"400\">"
+				svgOutput += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" overflow=\"hidden\" clip=\"auto\" x=\"0\" y=\"0\" width=\"800\" height=\"400\" id=\"plot\" onmousedown=\";\" style=\"background-color: #ffffff;\">";
 				svgOutput += drawFunction();
 				svgOutput += "</svg>";
 				// Populate HTML with svg output
 				//console.log(svgOutput);
 				document.getElementById("out").innerHTML = svgOutput;
-			//} catch(err){
-			//	window.alert(err);
-			//}
+			} catch(err){
+				window.alert(err);
+			}
 		}
 		// Generates svg text based off of the parsed code passed as an argument
 		function drawFunction(){
@@ -724,7 +788,8 @@
 					yTemp = yPos + functions[i].charHeight + 25;
 					for(var j=0; j < functions[i].local.length; j++){
 						retString += functions[i].local[j].draw(xTemp,yTemp,xPos,yPos);
-						yTemp += functions[i].local[j].heightOfBox();
+						if ( functions[i].local[j].getType() == 'Object' && functions[i].local[j].getAlloc() ) { yTemp += 30; }
+						else { yTemp += functions[i].local[j].heightOfBox(); }
 					}
 					// Changes spacing between function calls on the stack. This will eventually
 					// need to be dynamic, changing based on the number of objects on the heap.
@@ -753,7 +818,7 @@
 				window.alert("No function calls on stack!");
 			}
 		}
-
+		
 		function printPrevText(){
 			longestFunctionWidth = 0;
 			var prevText = document.getElementById("functioncall").value;
@@ -832,7 +897,7 @@
 			}
 		  }
 		}
-	//name of the var looking and the coordinates of the var
+	//name of the var looking and the coordinates of the var 
 		/** End functions that perform various tasks **/
     </script>
 		<!-- End Javascript -->
@@ -858,10 +923,17 @@
     <div class="info">
       <div class="innerHeader">Instructions</div>
       <img class="img" src="images/logo.png" />
-      <p>Type code in the text field.</p>
-      <p>Ex: main.x=3;y=2.a=1;b=2</p>
-      <p>Example with an Object:</p>
-      <p>main.x=3;y=2.a=1;b=point(x=1,y=1)</p>
+	  <p> '-' separates function name, parameters and variables </p>
+	  <p> ',' separates multiple parameters or local variables  </p>
+	  <p> 'varName=Var' creates an object </p>
+	  <p> 'x=objectName()' creates an object </p>
+	  <p> 'x=array()' creates an array. In arrays variables are just a comma seperated list. </p>
+	  <p> '@' refers to a pass by reference object </p>
+	  <p> '$' allows a variable to point to a previous call's object </p>
+      <p>Ex1: main-x=3,y=2-a=1,b=2</p>
+      <p>Ex2: main-x=3,y=2-a=1,b=point(x=1,y=1)</p>
+	  <p>Ex3: main--x=array(node(x=4),node(x=5))</p>
+
     </div>
 
     <br class="clearright"><br>
@@ -903,12 +975,15 @@
 
     </div>
 
+	
     <br class="clearboth">
 
+	<br><br>
     <!--FOOTER-->
     <div class="footer">
       <b>Hackstreet Boys</b> - Capstone<br/>
     </div>
+
 
 
 
