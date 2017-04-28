@@ -131,8 +131,10 @@
 				if (paramWidth >= varWidth) { width = paramWidth + this.offset*3; }
 				else { width = varWidth + this.offset*6; }
 				// use longest width in the function stack for uniformity
+				console.log(width);
 				if (width >= longestFunctionWidth) { longestFunctionWidth = width; }
 				else { width = longestFunctionWidth; }
+				console.log(width);
 				return width;
 			}
 			// Draw function generates SVG text with the parameters defined in each function.
@@ -206,7 +208,7 @@
 				// loop over all variables and get the longest variable name
 				var varWidth = 0;
 				for (var i = 0; i < this.variables.length; i++) {
-					if (objectStyle != 'java' && this.variables[i].widthTot() > varWidth) {
+					if (this.variables[i].widthTot() > varWidth) {
 						varWidth = this.variables[i].widthTot();
 					}
 				}
@@ -218,22 +220,22 @@
 			}
 			// Receives current xPos and yPos from drawFunction()
 			getReferences(xF,yF){
-				console.log(functions);
+				console.log('here');
 				var retString = "";
 				for( var i = 0; i<functions.length; i++){
-					//console.log(functions[i].para);
+					//console.log(functions[i].local.length);
 					//console.log(functions[i].para.length);
 					for(var j=0; j<functions[i].para.length; j++){
-						//console.log(functions[i].para[j].getType() + " " + j);
+						//console.log(functions[i].para[j].getReference());
 						if (functions[i].para[j].getType() == 'RefVar' && this.name == functions[i].para[j].getReference()){
 							var loc = functions[i].para[j].getPoint();
 							retString += "<line x1=\"" + loc[0] + "\" y1=\"" + loc[1] + "\" x2=\"" + xF + "\" y2=\"" + yF + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
 						}
 					}
 					for(var j = 0; j<functions[i].local.length; j++){
-						//console.log(functions[i].para[j]);
+						//console.log(functions[i].local[j]);
 						if (functions[i].local[j].getType() == 'RefVar' && this.name == functions[i].local[j].getReference()){
-							var loc = functions[i].para[j].getPoint();
+							var loc = functions[i].local[j].getPoint();
 							retString += "<line x1=\"" + loc[0] + "\" y1=\"" + loc[1] + "\" x2=\"" + xF + "\" y2=\"" + yF + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />"
 						}
 					}
@@ -401,7 +403,7 @@
 				return width;
 			}
 			widthOfBox(){
-				var width = 10;
+				var width = 5;
 				width += this.value.length*this.charWidth;
 				return width;
 			}
@@ -512,7 +514,7 @@
 			}
 			arrayDraw(x,y,xAnchor,yAnchor){
 				//y += 100;
-				console.log(x,y);
+				//console.log(xAnchor);
 				var retString = "";
 				var xKey = x + 10;		// x-position for text
 				var yKey = y;				// y-position for text
@@ -536,11 +538,12 @@
 				// Draw name and bounding box on the *heap*
 				y += 100; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
 				// get final coordinates of object pointer
-				x2 = x + this.widthOfBox()/2; // lefthand side of the box, this is the end location of the tail pointer
+				x2 = x + this.widthOfBox()/2 +xAnchor; // lefthand side of the box, this is the end location of the tail pointer
 				y2 = y; // calculate y-axis center of the bounding box, end location of the tail pointer
 				// Draw line pointer from middle of stack box to left-center of heap box
 				retString += "<line x1=\"" + xBox + "\" y1=\"" + yBox + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
 				// Draw local variables
+				x += xAnchor;
 				for (var i = 0; i < this.elements.length; i++){
 					//console.log(this.elements[i]);
 					var temp = 0;
@@ -581,7 +584,7 @@
 				y = yAnchor + heapOffset; // this value will need to change based on the number of elements in the heap, start from top of function bounding box
 				//console.log(heapOffset);
 				// get final coordinates of object pointer
-				x2 = x; // lefthand side of the box, this is the end location of the tail pointer
+				x2 = x + xAnchor; // lefthand side of the box, this is the end location of the tail pointer
 				y2 = y + 15; // calculate y-axis center of the bounding box, end location of the tail pointer
 				// Draw line pointer from middle of stack box to left-center of heap box
 				retString += "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" style=\"stroke:rgb(0,0,0);stroke-width:2\" />";
@@ -625,7 +628,7 @@
 				}
 			}
 			vars.push(variables.slice(start,variables.length));
-			//console.log(vars);
+			console.log(vars);
 			try{
 				return storeVariables(vars); 
 			}
@@ -640,17 +643,16 @@
 				if (/[.]/.test(variables[i])){
 					if ( /[a-zA-Z]/.test(variables[i+1]) ){ throw variables[i] + " is not a float!"; }	
 				}
+				else if ( /[(]/.test(variables[i])){
+					vars.push(variables.slice(start,variables.slice(start,variables.length).indexOf(')')+start+1));
+					start = variables.slice(start,variables.length).indexOf(')')+start+1;
+					i = variables.slice(start,variables.length).indexOf(')')+start+1;
+					if (/[,;]/.test(variables[start])){ start++; i++; }
+				}
 				else if ( /[;,]/.test(variables[i])){
 					vars.push(variables.slice(start,i));
 					start = i+1;
 				}
-				else if ( /[(]/.test(variables[i])){
-					vars.push(variables.slice(start,variables.slice(start,variables.length).lastIndexOf(')')+start+1));
-					start = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
-					i = variables.slice(start,variables.length).lastIndexOf(')')+start+1;
-					if (/[,;]/.test(variables[start])){ start++; i++; }
-				}
-				
 			}
 			vars.push(variables.slice(start,variables.length));
 			//console.log(vars);
@@ -718,9 +720,9 @@
 			return new referenceObject(refObj.name,refObj.objName,refObj.variables,refObj.xHeapLoc,refObj.yHeapLoc);
 		}
 		function newReference(obj){
-			//console.log(f);
+			console.log(obj);
 			var name = obj.slice(0,obj.indexOf('='));
-			var ref = obj.slice(obj.indexOf('$')+1,obj.length)
+			var ref = obj.slice(obj.indexOf('@')+1,obj.length)
 			return new RefVar(name,ref);
 		}
 		function newRefVariables(obj){
@@ -730,6 +732,7 @@
 		}
 		// creates an array of variable objects, whether Var or Object, to be used to create the new function
 		function call(){
+			console.log(longestFunctionWidth);
 			try {
 				var svgOutput = "" // clear svgOutput before each addition to the stack
 				var allFunctions = []; // stores multiple functions seperated by newlines
@@ -752,17 +755,31 @@
 					}
 				}
 				// generate svg below. "content" is the string used to store the entire svg text
-				totalHeight += functions.length * 100
-				console.log(functions);
-				svgOutput += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" overflow=\"hidden\" clip=\"auto\" x=\"0\" y=\"0\" width=\"800\" height=\"400\" id=\"plot\" onmousedown=\";\" style=\"background-color: #ffffff;\">";
-				svgOutput += drawFunction();
-				svgOutput += "</svg>";
+				//totalHeight += functions.length * 120
+				//console.log(functions);
+				svgFunctionElements = ""; // stores the 'content' of the svg element
+				//svgOutput += "<svg x=\"0\" y=\"0\" overflow=\"scroll\" width=\"800\" height=\"400\">"
+				svgFunctionElements += drawFunction();
+				//svgOutput += svgFunctionElements;
+				//svgOutput += "</svg>";
+				svgOutput = resizeOutput();
 				// Populate HTML with svg output
 				//console.log(svgOutput);
 				document.getElementById("out").innerHTML = svgOutput;
 			} catch(err){
 				window.alert(err);
 			}
+		}
+		// Resizes the entire SVG element to allow for scrolling
+		function resizeOutput(){
+			totalHeight, totalWidth = getSvgDimensions();
+			svgSized = "";
+			svgSized += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
+			svgSized += "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" x=\"0\" y=\"0\" overflow=\"hidden\" clip=\"auto\" width=\"" + totalWidth + "\" height=\"" + totalHeight + "\" id=\"plot\" onmousedown=\";\" style=\"background-color: #ffffff;\">";
+			//svgSized += "<svg x=\"0\" y=\"0\" overflow=\"scroll\" width=\"" + totalWidth + "\" height=\"" + totalHeight + "\">"
+			svgSized += svgFunctionElements;
+			svgSized += "</svg>";
+			return svgSized;
 		}
 		// Generates svg text based off of the parsed code passed as an argument
 		function drawFunction(){
@@ -800,6 +817,78 @@
 				}
 		  return retString;
 		}
+		function getSvgDimensions(){
+			totalWidth = 0;
+			totalHeight = 0;
+			for(var i = functions.length - 1; i >= 0; i--){
+				//Loop over parameters
+				//console.log(functions[i].para.length)
+				//console.log(functions[i].local.length)
+				for(var j=0; j < functions[i].para.length; j++){
+					console.log("totalWidthPara: " + totalWidth + "," + functions[i].para[j].widthTot())
+					if (totalWidth < functions[i].para[j].widthTot()) {
+						totalWidth = functions[i].para[j].widthTot();
+					}
+					console.log("totalHeightPara: " + totalHeight + "," + functions[i].para[j].heightOfBox())
+				 	if (totalHeight < functions[i].para[j].heightOfBox()) {
+				 		totalHeight = functions[i].para[j].heightOfBox()
+				 	}
+				}
+				for(var j=0; j < functions[i].local.length; j++){
+					console.log("totalWidthLocal: " + totalWidth + "," + functions[i].local[j].widthTot())
+				 	if (totalWidth < functions[i].local[j].widthTot()) {
+				 		totalWidth = functions[i].local[j].widthTot();
+				 	}
+					if(functions[i].local[j].getType() == 'Object') {
+						refWidth = nestedObjectWidth(functions[i].local[j]);
+						if (totalWidth < refWidth) { totalWidth = refWidth; }
+					}
+					console.log("totalHeightLocal: " + totalHeight + "," + functions[i].local[j].heightOfBox())
+				 	if (totalHeight < functions[i].local[j].heightOfBox()) {
+				 		totalHeight = functions[i].local[j].heightOfBox();
+				 	}
+					if(functions[i].local[j].getType() == 'Object') {
+						refHeight = nestedObjectHeight(functions[i].local[j]);
+						if (totalHeight < refHeight) { totalHeight = refHeight; }
+					}
+				}
+				totalHeight += functions[i].heightOfBox();
+				if (totalWidth < longestFunctionWidth) { totalWidth = longestFunctionWidth; }
+				if (totalHeight < functions[i].bottomY) { totalHeight = functions[i].bottomY + padding; }
+				if (heapOffset > functions[i].heightOfBox()) { totalHeight += heapOffset + padding; }
+				else { totalHeight += padding; } //console.log(yPos); }
+			}
+			// for (var i = 0; i < references.length; i++) {
+			// 	refWidth,refHeight = references[i].getCoords();
+			// 	refTotWidth = refWidth + references[i].widthOfBox();
+			// 	console.log("refWidth:" + refWidth)
+			// 	if (totalWidth < refTotWidth) { totalWidth = refTotWidth; }
+			// }
+			console.log("totalWidth:" + totalWidth + ", totalHeight:" + totalHeight)
+			return totalHeight, totalWidth+50;
+		}
+		function nestedObjectWidth(localObj) {
+			refWidth = localObj.xHeapLoc;
+			refWidth += localObj.widthTot();
+			console.log(localObj.variables.length)
+			for (var k = 0; k < localObj.variables.length; k++){
+				if (localObj.variables[k].getType() == 'Object') {
+					refWidth = nestedObjectWidth(localObj.variables[k]);
+				}
+			}
+			return refWidth;
+		}
+		function nestedObjectHeight(localObj) {
+			refHeight = localObj.yHeapLoc;
+			refHeight += localObj.heightOfBox();
+			console.log(localObj.variables.length)
+			for (var k = 0; k < localObj.variables.length; k++){
+				if (localObj.variables[k].getType() == 'Object') {
+					refHeight = nestedObjectHeight(localObj.variables[k]);
+				}
+			}
+			return refHeight;
+		}
 		/**************************************************************************/
 		/** Functions that perform various tasks **/
 		// Function called to remove the last 'function' placed on the call stack
@@ -820,7 +909,7 @@
 		}
 		
 		function printPrevText(){
-			longestFunctionWidth = 0;
+			//longestFunctionWidth = 0;
 			var prevText = document.getElementById("functioncall").value;
 			//console.log(prevText);
 			//document.getElementById("prevFuncCall").innerHTML = prevText;
@@ -932,7 +1021,7 @@
 	  <p> '$' allows a variable to point to a previous call's object </p>
       <p>Ex1: main-x=3,y=2-a=1,b=2</p>
       <p>Ex2: main-x=3,y=2-a=1,b=point(x=1,y=1)</p>
-	  <p>Ex3: main--x=array(node(x=4),node(x=5))</p>
+	  <p>Ex3: main--x=array(node(x=4),x=5)</p>
 
     </div>
 
